@@ -15,8 +15,6 @@ export default defineConfig({
       '/api': { target: backend, changeOrigin: true },
       '/videos': { target: backend, changeOrigin: true },
       '/thumbnails': { target: backend, changeOrigin: true },
-      '/gallery': { target: backend, changeOrigin: true },
-      '/video': { target: backend, changeOrigin: true },
       '/render': { target: renderer, changeOrigin: true },
     }
   }

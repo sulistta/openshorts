@@ -44,15 +44,15 @@ export default function Legal() {
 
         <Section title="Local storage and deletion">
           <ul className="list-disc pl-6 space-y-2">
-            <li>Projects, clip manifests, edits, actor images, and gallery videos are stored under the local <code>output/</code> volume.</li>
-            <li>Projects and gallery entries do not expire automatically. Use the dashboard or DELETE API endpoints for explicit deletion.</li>
+            <li>Projects, clip manifests, and edits are stored under the local <code>output/</code> volume.</li>
+            <li>Projects do not expire automatically. Use the dashboard or DELETE API endpoint for explicit deletion.</li>
             <li>Temporary uploads and transient processing files may be cleaned up according to the administrator's disk limits.</li>
             <li>Access logs and backups are controlled by the administrator.</li>
           </ul>
         </Section>
 
         <Section title="Third-party providers">
-          <p>When enabled, Gemini, ElevenLabs, fal.ai, Upload-Post, YouTube, and other integrations receive the data required for the requested operation. Their terms and privacy policies apply to those requests.</p>
+          <p>When enabled, Gemini, ElevenLabs, Upload-Post, YouTube, and other integrations receive the data required for the requested operation. Their terms and privacy policies apply to those requests.</p>
         </Section>
 
         <Section title="No warranty">

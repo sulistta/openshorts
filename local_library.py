@@ -167,7 +167,7 @@ def bootstrap_projects(output_dir: str) -> int:
         job_dir = safe_job_dir(output_dir, job_id)
         if not job_dir or not os.path.isdir(job_dir):
             continue
-        if job_id in {"gallery", "thumbnails"} or os.path.exists(_manifest_path(job_dir)):
+        if job_id == "thumbnails" or os.path.exists(_manifest_path(job_dir)):
             continue
         metadata = glob.glob(os.path.join(job_dir, "*_metadata.json"))
         if not metadata:
@@ -345,4 +345,3 @@ def directory_size(path: str) -> int:
             except OSError:
                 pass
     return total
-

@@ -119,7 +119,7 @@ utility). Radii: `--radius-card: 10px` (rounded-card), `--radius-input: 8px`
   Active state = brass hairline + paper3 fill + ink text. Never bg-white
   text-black, never per-feature colors.
 - `<StepIndicator>` from `src/components/ui/StepIndicator.jsx` — the single
-  wizard stepper (ThumbnailStudio + SaaShortsTab share it). Mono ordinals.
+  wizard stepper. Mono ordinals.
 - `.input-field` — inset bg-paper, hairline, focus brass ring (redefined in
   index.css; existing class name kept).
 - `.readout` — mono UPPERCASE value chip for machine data (timecodes, costs,
@@ -133,8 +133,8 @@ utility). Radii: `--radius-card: 10px` (rounded-card), `--radius-input: 8px`
   at most one small secondary highlight per view. NOTHING ELSE gets a hue.
 - Zero gradients (text or background). Zero glassmorphism / backdrop-blur
   panels. Zero per-feature identity colors (the old violet/emerald/amber/teal
-  per-tab coding is retired — tools are differentiated by mono eyebrow ordinals
-  `01 · CLIPS`, `02 · AI SHORTS`, not by hue).
+  per-tab coding is retired — tools are differentiated by mono eyebrow ordinals,
+  not by hue).
 - The two-register typography (lowercase prose / UPPERCASE mono labels).
 - The CTA voice, radii, hairline card language.
 - English copy everywhere (ScheduleWeekModal migrates from Spanish).
@@ -152,15 +152,14 @@ utility). Radii: `--radius-card: 10px` (rounded-card), `--radius-input: 8px`
 
 No italics anywhere. No gradient text. No gradient buttons. No backdrop-blur.
 No glowing orbs. No invented metrics (existing cited stats/prices are the
-brief's real copy — keep them). No emoji as icons in chrome (existing emoji
-option labels in SaaShorts pickers may stay as content). No rounded-2xl
+brief's real copy — keep them). No emoji as icons in chrome. No rounded-2xl
 soup — use rounded-card/rounded-input/rounded-full deliberately. No
 `bg-[#121214]`-style hardcoded colors — tokens only. No Title Case UI copy.
 
 ## Functional contract (NEVER break)
 
 Hash routing (`#app`, `#legal`, `#features`, `#how-it-works`, `#faq`), localStorage
-keys (`gemini_key`, `uploadPostKey_v3`, `elevenLabsKey_v1`, `falKey_v1`,
-`uploadUserId`, `openshorts_session`, `openshorts_skip_landing`), API calls and
+keys (`gemini_key`, `uploadPostKey_v3`, `elevenLabsKey_v1`, `uploadUserId`,
+`openshorts_session`, `openshorts_skip_landing`), API calls and
 BYOK headers, and Remotion preview/render wiring are functional contracts.
 Redesign is classes + markup structure only.

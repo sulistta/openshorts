@@ -2,8 +2,8 @@
 
 OpenShorts is a self-hosted AI video pipeline. It turns long videos into
 vertical clips, adds subtitles and effects, and optionally publishes through
-provider APIs that you bring yourself. Projects, clip history, actor images,
-and the public gallery live on the local `output/` volume.
+provider APIs that you bring yourself. Projects and clip history live on the
+local `output/` volume.
 
 This repository runs as a single-tenant local service. It has no account
 login, subscription, quota, billing, or remote migration path.
@@ -49,13 +49,10 @@ Deletion is explicit:
 
 ```bash
 curl -X DELETE 'http://localhost:8000/api/projects/<job_id>?confirm=true'
-curl -X DELETE 'http://localhost:8000/api/gallery/videos/<video_id>?confirm=true'
-curl -X DELETE 'http://localhost:8000/api/gallery/actors/<actor_id>?confirm=true'
 ```
 
-Gallery reads are public on the trusted network. Projects and gallery entries
-do not expire automatically; only temporary uploads and transient files are
-subject to local disk cleanup.
+Projects do not expire automatically; only temporary uploads and transient
+files are subject to local disk cleanup.
 
 ## API, MCP and CLI
 
@@ -94,8 +91,8 @@ npm run dev
 ```
 
 Run Python syntax checks with `python3 -m py_compile app.py mcp_server.py
-local_library.py local_gallery.py`. The test suite contains pipeline and
-storage tests; some media tests require FFmpeg and model dependencies.
+local_library.py`. The test suite contains pipeline and storage tests; some
+media tests require FFmpeg and model dependencies.
 
 ## License
 

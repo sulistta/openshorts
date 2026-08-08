@@ -132,16 +132,6 @@ export default function Landing({ onLaunchApp }) {
       icon: Bot,
       title: "MCP Server, API & CLI for AI Agents",
       description: "Connect Claude, ChatGPT or n8n to an always-on endpoint, or run pip install openshorts and clip from the terminal. Same pipeline, no dashboard needed."
-    },
-    {
-      icon: Sparkles,
-      title: "AI UGC Video Generator",
-      description: "AI writes the script and generates a lip-synced avatar video — from $0.65/video."
-    },
-    {
-      icon: FileVideo,
-      title: "AI Actors & Lip-Sync",
-      description: "Pick an AI actor or upload a photo for a lip-synced talking head video."
     }
   ];
 
@@ -173,18 +163,6 @@ export default function Landing({ onLaunchApp }) {
     {
       question: "Can OpenShorts generate YouTube thumbnails and titles for free?",
       answer: "Yes. OpenShorts includes an AI YouTube thumbnail generator, title suggestions, and descriptions with chapter timestamps. These features use the Gemini key configured by you."
-    },
-    {
-      question: "What is the AI UGC Video Generator?",
-      answer: "OpenShorts includes an AI UGC (User Generated Content) video creator that generates marketing videos with AI actors for any product or business. You describe your product or paste a website URL — the AI writes a viral script, generates a realistic AI actor with lip-synced voiceover, adds b-roll visuals, TikTok-style subtitles, and hook text overlays. The result is a ready-to-post vertical video for TikTok, Instagram Reels, or YouTube Shorts. Two cost modes: Low Cost (~$0.65/video using Hailuo + VEED Lipsync) and Premium (~$2/video using Kling Avatar v2)."
-    },
-    {
-      question: "Can I use the AI UGC Video Generator for any type of business?",
-      answer: "Yes. The AI Shorts generator works for any product, service, or business — not just SaaS. You can use it for restaurants, e-commerce stores, coaching services, local businesses, personal brands, apps, and more. Just describe your business in the text field (e.g. 'Artisan pizza restaurant in Madrid, wood-fired oven, home delivery') or paste your website URL, and the AI generates viral marketing scripts tailored to your business."
-    },
-    {
-      question: "How much does it cost to generate an AI UGC video?",
-      answer: "OpenShorts itself is free, but the AI Shorts feature uses external APIs (fal.ai for video generation, ElevenLabs for voiceover) that charge per use. Low Cost mode costs approximately $0.65 per video (Flux image $0.05 + ElevenLabs voice $0.10 + Hailuo img2video $0.19 + VEED Lipsync $0.20 + b-roll $0.10). Premium mode costs approximately $2.00 per video using Kling Avatar v2 for higher quality. Both modes are significantly cheaper than hiring UGC creators ($50-500 per video) or using platforms like HeyGen ($24-180/month)."
     },
     {
       question: "What AI does OpenShorts use for viral moment detection?",
@@ -254,7 +232,7 @@ export default function Landing({ onLaunchApp }) {
             </h1>
 
             <p className="hero-description text-muted max-w-2xl mb-8 leading-relaxed lowercase">
-              turn long videos into viral 9:16 shorts and generate UGC marketing videos with AI actors on your own machine.
+              turn long videos into viral 9:16 shorts on your own machine.
             </p>
 
             {/* The hero CTA is the product itself: paste a link and land in the
@@ -412,7 +390,7 @@ export default function Landing({ onLaunchApp }) {
                 <span className="readout border border-rule rounded-full px-2.5 py-1">Free · Docker</span>
               </div>
               <ul className="space-y-1.5 mb-6 flex-1">
-                {['Your machine: 5 to 8 min on a typical CPU', 'Bring your own Gemini, ElevenLabs and fal.ai keys', 'You install it, you maintain it, you back it up', 'Free forever, and always will be'].map((f, i) => (
+                {['Your machine: 5 to 8 min on a typical CPU', 'Bring your own Gemini and ElevenLabs keys', 'You install it, you maintain it, you back it up', 'Free forever, and always will be'].map((f, i) => (
                   <li key={i} className="flex items-center gap-2 text-sm text-muted"><Check size={14} className="text-ok shrink-0" />{f}</li>
                 ))}
               </ul>
@@ -424,13 +402,13 @@ export default function Landing({ onLaunchApp }) {
         </div>
       </section>
 
-      {/* 3 Tools in 1 Section */}
+      {/* Tools */}
       <section className="py-20 px-6 border-t border-rule">
         <div className="max-w-6xl mx-auto">
-          <SectionHeader eyebrow="04 · Tools" title="3 Free Tools in 1 Platform">
+          <SectionHeader eyebrow="03 · Tools" title="2 Free Tools in 1 Platform">
             Everything runs locally; add only the provider keys needed for the features you use.
           </SectionHeader>
-          <div className="grid md:grid-cols-3 gap-5">
+          <div className="grid md:grid-cols-2 gap-5">
             <div className="card p-8">
               <p className="eyebrow mb-4">01 · Clips</p>
               <Scissors size={20} className="text-brass mb-4" />
@@ -443,18 +421,7 @@ export default function Landing({ onLaunchApp }) {
               </ul>
             </div>
             <div className="card p-8">
-              <p className="eyebrow mb-4">02 · AI Shorts</p>
-              <Sparkles size={20} className="text-brass mb-4" />
-              <h3 className="font-display text-2xl lowercase text-ink mb-2">AI Shorts</h3>
-              <p className="text-muted text-sm leading-relaxed mb-4">UGC marketing videos with AI actors for any business.</p>
-              <ul className="space-y-1.5">
-                {['AI actor generation + lip-sync', 'B-roll + TikTok-style subtitles', 'From $0.65 per video'].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-xs text-muted"><Check size={12} className="text-ok shrink-0" />{f}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="card p-8">
-              <p className="eyebrow mb-4">03 · Studio</p>
+              <p className="eyebrow mb-4">02 · Studio</p>
               <Monitor size={20} className="text-brass mb-4" />
               <h3 className="font-display text-2xl lowercase text-ink mb-2">YouTube Studio</h3>
               <p className="text-muted text-sm leading-relaxed mb-4">Free AI YouTube toolkit: thumbnails, titles, descriptions.</p>
@@ -471,8 +438,8 @@ export default function Landing({ onLaunchApp }) {
       {/* Features Section */}
       <section id="features" className="py-20 px-6 border-t border-rule">
         <div className="max-w-6xl mx-auto">
-          <SectionHeader eyebrow="05 · Features" title="Free AI Clip Generator + UGC Video Creator">
-            The free open source clip generator & AI UGC video creator. A smart AI video clipper for TikTok, Reels & Shorts.
+          <SectionHeader eyebrow="04 · Features" title="Free AI Clip Generator">
+            A free, open source AI video clipper for TikTok, Reels, and Shorts.
           </SectionHeader>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map((feature, i) => (
@@ -485,8 +452,8 @@ export default function Landing({ onLaunchApp }) {
       {/* API Keys Section */}
       <section className="py-20 px-6 border-t border-rule">
         <div className="max-w-5xl mx-auto">
-          <SectionHeader eyebrow="06 · API Keys" title="Bring the keys you need">
-            Bring your own keys for Gemini, ElevenLabs, fal.ai and Upload-Post when you use those integrations:
+          <SectionHeader eyebrow="05 · API Keys" title="Bring the keys you need">
+            Bring your own keys for Gemini, ElevenLabs, and Upload-Post when you use those integrations:
           </SectionHeader>
           <div className="grid md:grid-cols-3 gap-5">
             <div className="card p-6 relative">
@@ -517,33 +484,13 @@ export default function Landing({ onLaunchApp }) {
               <p className="text-muted text-sm leading-relaxed">Enables direct publishing to YouTube, TikTok, and Instagram Reels from the dashboard. <a href="https://www.upload-post.com" target="_blank" rel="noopener noreferrer" className="text-brass underline hover:brightness-110">Social media API</a> that lets you post your clips and thumbnails without leaving OpenShorts.</p>
             </div>
           </div>
-          <div className="grid md:grid-cols-2 gap-5 mt-5">
-            <div className="card p-6 relative">
-              <span className="readout absolute top-4 right-4 border border-rule rounded-full px-2.5 py-1">AI Shorts</span>
-              <div className="w-10 h-10 rounded-input bg-paper3 flex items-center justify-center mb-4">
-                <Zap size={18} className="text-brass" />
-              </div>
-              <h3 className="font-display text-xl lowercase text-ink mb-1">fal.ai API</h3>
-              <div className="mb-3"><span className="badge-ok">optional integration</span></div>
-              <p className="text-muted text-sm leading-relaxed">Powers AI Shorts: generates AI actor images (Flux), talking head videos (Hailuo/Kling), and lip-sync (VEED). Required only for the AI UGC video generator.</p>
-            </div>
-            <div className="card p-6 relative">
-              <span className="readout absolute top-4 right-4 border border-rule rounded-full px-2.5 py-1">AI Shorts</span>
-              <div className="w-10 h-10 rounded-input bg-paper3 flex items-center justify-center mb-4">
-                <Languages size={18} className="text-brass" />
-              </div>
-              <h3 className="font-display text-xl lowercase text-ink mb-1">ElevenLabs TTS</h3>
-              <div className="mb-3"><span className="badge-ok">optional integration</span></div>
-              <p className="text-muted text-sm leading-relaxed">Generates natural voiceovers for AI Shorts from the script. Multiple voice options for male and female actors in English and Spanish.</p>
-            </div>
-          </div>
         </div>
       </section>
 
       {/* How It Works Section */}
       <section id="how-it-works" className="py-20 px-6 border-t border-rule">
         <div className="max-w-4xl mx-auto">
-          <SectionHeader eyebrow="07 · Pipeline" title="How It Works">
+          <SectionHeader eyebrow="06 · Pipeline" title="How It Works">
             From long-form video to viral-ready clips in 5 automated steps.
           </SectionHeader>
           <div className="space-y-8">
@@ -557,7 +504,7 @@ export default function Landing({ onLaunchApp }) {
       {/* Tech Stack */}
       <section className="py-20 px-6 border-t border-rule">
         <div className="max-w-5xl mx-auto">
-          <SectionHeader eyebrow="08 · Stack" title="Built with Proven Technology">
+          <SectionHeader eyebrow="07 · Stack" title="Built with Proven Technology">
             Industry-leading AI models and open source tools in one pipeline.
           </SectionHeader>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -568,7 +515,6 @@ export default function Landing({ onLaunchApp }) {
               { name: "MediaPipe", desc: "Face Tracking" },
               { name: "FFmpeg", desc: "Video Processing" },
               { name: "ElevenLabs", desc: "Voice & TTS" },
-              { name: "fal.ai", desc: "AI Video Gen" },
               { name: "React + Vite", desc: "Dashboard" },
               { name: "Docker", desc: "Deployment" }
             ].map((tech, i) => (
@@ -584,7 +530,7 @@ export default function Landing({ onLaunchApp }) {
       {/* Use Cases */}
       <section className="py-20 px-6 border-t border-rule">
         <div className="max-w-5xl mx-auto">
-          <SectionHeader eyebrow="10 · Use Cases" title="Who Uses OpenShorts?">
+          <SectionHeader eyebrow="08 · Use Cases" title="Who Uses OpenShorts?">
             Creators, marketers, and agencies scaling short-form video production.
           </SectionHeader>
           <div className="grid md:grid-cols-3 gap-5">
@@ -603,11 +549,6 @@ export default function Landing({ onLaunchApp }) {
                 title: "Podcasters & Educators",
                 description: "Extract the most engaging moments from episodes and lessons.",
                 icon: FileVideo
-              },
-              {
-                title: "Businesses & Brands",
-                description: "UGC-style marketing videos with AI actors — from $0.65 per video.",
-                icon: Sparkles
               }
             ].map((useCase, i) => (
               <div key={i} className="card p-6">
@@ -623,7 +564,7 @@ export default function Landing({ onLaunchApp }) {
       {/* FAQ Section */}
       <section id="faq" className="py-20 px-6 border-t border-rule">
         <div className="max-w-3xl mx-auto">
-          <SectionHeader eyebrow="11 · FAQ" title="Frequently Asked Questions">
+          <SectionHeader eyebrow="09 · FAQ" title="Frequently Asked Questions">
             Everything you need to know about OpenShorts, from setup to features.
           </SectionHeader>
           <div className="divide-y divide-rule border-y border-rule">
@@ -676,7 +617,7 @@ export default function Landing({ onLaunchApp }) {
           <div className="border-t border-rule pt-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <img src="/logo-openshorts.png" alt="OpenShorts" className="w-6 h-6" />
-              <span className="text-sm text-muted">OpenShorts — Free Open Source Clip Generator & AI UGC Video Creator</span>
+              <span className="text-sm text-muted">OpenShorts — Free Open Source Clip Generator</span>
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm lowercase text-muted">
               <a href="https://github.com/mutonby/openshorts" target="_blank" rel="noopener noreferrer" className="hover:text-ink transition-colors">GitHub</a>

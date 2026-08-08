@@ -42,8 +42,8 @@ The MCP server exposes `process_video`, `get_job_status`, `list_clips`,
 ## Rules
 
 - Only process content the user owns or is authorized to use.
-- Projects and gallery files are durable on the local output volume; deletion
-  is explicit through the dashboard or DELETE API endpoints.
+- Projects are durable on the local output volume; deletion is explicit through
+  the dashboard or DELETE API endpoint.
 - Keep provider costs and credentials under the user's own accounts.
 
 ## CLI shortcut
