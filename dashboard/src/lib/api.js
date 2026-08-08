@@ -1,4 +1,4 @@
-// Centralized API client for the local self-hosted backend.
+// Centralized API client for the local desktop backend.
 import { getApiUrl } from '../config';
 
 export async function apiFetch(path, options = {}) {

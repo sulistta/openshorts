@@ -5,7 +5,7 @@ start instantly. Talks to the same REST API the dashboard and the MCP server
 use; nothing here can drift from what the app actually does.
 
 Target comes from the environment:
-  OPENSHORTS_API_URL  defaults to http://localhost:8000.
+  OPENSHORTS_API_URL  defaults to http://127.0.0.1:37831.
 """
 
 import argparse
@@ -16,7 +16,7 @@ import time
 import urllib.error
 import urllib.request
 
-DEFAULT_API = "http://localhost:8000"
+DEFAULT_API = "http://127.0.0.1:37831"
 POLL_SECONDS = 10
 
 

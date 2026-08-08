@@ -36,9 +36,14 @@ from local_library import (
 
 load_dotenv()
 
-# Constants
-UPLOAD_DIR = "uploads"
-OUTPUT_DIR = "output"
+# The desktop build keeps mutable projects outside the application bundle.  The
+# regular Python entry point still defaults to this repository, so local API
+# development remains straightforward.
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+RESOURCE_DIR = os.path.abspath(os.environ.get("OPENSHORTS_RESOURCE_DIR", APP_ROOT))
+DATA_DIR = os.path.abspath(os.environ.get("OPENSHORTS_DATA_DIR", APP_ROOT))
+UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
+OUTPUT_DIR = os.path.join(DATA_DIR, "output")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -66,8 +71,21 @@ UPLOADS_MAX_GB = int(os.environ.get("UPLOADS_MAX_GB", "15"))
 # Pre-flight quality gate: warn before processing a YouTube source below this
 # height (0 disables). Only applies to URLs; uploads are whatever the user gave.
 QUALITY_GATE_MIN_HEIGHT = int(os.environ.get("QUALITY_GATE_MIN_HEIGHT", "720"))
-QUALITY_PROBE_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "quality_probe.py")
+QUALITY_PROBE_SCRIPT = os.path.join(RESOURCE_DIR, "quality_probe.py")
 DISABLE_YOUTUBE_URL = os.environ.get("DISABLE_YOUTUBE_URL", "false").lower() in ("1", "true", "yes")
+
+
+def _pipeline_command() -> List[str]:
+    """Return a command that works both from source and from a PyInstaller sidecar."""
+    if os.environ.get("OPENSHORTS_FROZEN") == "1":
+        return [sys.executable, "--worker"]
+    return [sys.executable, "-u", os.path.join(RESOURCE_DIR, "main.py")]
+
+
+def _quality_probe_command(url: str) -> List[str]:
+    if os.environ.get("OPENSHORTS_FROZEN") == "1":
+        return [sys.executable, "--quality-probe", "--url", url]
+    return [sys.executable, QUALITY_PROBE_SCRIPT, "--url", url]
 
 async def resolve_gemini(request: Request) -> Optional[str]:
     """Resolve a request's Gemini key, falling back to the server env key."""
@@ -76,7 +94,7 @@ async def resolve_gemini(request: Request) -> Optional[str]:
 
 
 async def resolve_upload_post(request: Request, body_key: Optional[str] = None):
-    """Resolve Upload-Post credentials using self-hosted BYOK precedence."""
+    """Resolve Upload-Post credentials using local BYOK precedence."""
     header = request.headers.get("X-Upload-Post-Key")
     key = header or body_key or os.environ.get("UPLOAD_POST_API_KEY")
     profile = (request.headers.get("X-Upload-Post-User")
@@ -236,8 +254,8 @@ def _recover_jobs_from_disk():
         print(f"♻️  Recovered {recovered} completed job(s) from disk.")
 
 
-# --- Mid-flight job resume (survive a redeploy without losing work) ----------
-# A job lives only in memory, so killing the container mid-processing used to
+# --- Mid-flight job resume (survive an app restart without losing work) -----
+# A job lives only in memory, so stopping the backend mid-processing used to
 # lose it: the user's clip just stops. We persist a tiny manifest per job and,
 # on startup, re-enqueue any that were interrupted — the user sees it resume
 # instead of vanish. Bounded by MAX_RESUME_ATTEMPTS so a video that reliably
@@ -484,8 +502,8 @@ async def run_job_wrapper(job_id):
          print(f"❌ Job wrapper error {job_id}: {e}")
     finally:
         # The subprocess returned (success or genuine failure) — a terminal
-        # state, so drop the resume manifest. It only survives if the container
-        # was killed mid-run, which is exactly when we want to resume.
+        # state, so drop the resume manifest. It only survives if the backend
+        # was stopped mid-run, which is exactly when we want to resume.
         _clear_resume_manifest(job_id)
         job = jobs.get(job_id) or {}
         if job.get("status") == "completed":
@@ -617,10 +635,24 @@ app = FastAPI(lifespan=lifespan)
 import mcp_server as _mcp_server
 app.include_router(_mcp_server.router)
 
-# Enable CORS for a trusted local network/reverse proxy deployment.
+# The desktop webview and Vite development server are the only browser clients
+# allowed to call the loopback API. Additional local origins can be opted into
+# explicitly for integrations that need them.
+_configured_origins = [
+    origin.strip()
+    for origin in os.environ.get("OPENSHORTS_ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+LOCAL_APP_ORIGINS = _configured_origins or [
+    "tauri://localhost",
+    "http://tauri.localhost",
+    "https://tauri.localhost",
+    "http://127.0.0.1:1420",
+    "http://localhost:1420",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=LOCAL_APP_ORIGINS,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -697,7 +729,7 @@ async def run_job(job_id, job_data):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT, # Merge stderr to stdout
             env=env,
-            cwd=os.getcwd()
+            cwd=RESOURCE_DIR,
         )
         
         # We need to capture logs in a thread because Popen isn't async
@@ -786,7 +818,7 @@ async def run_job(job_id, job_data):
 
 @app.get("/health")
 async def health():
-    """Lightweight liveness probe for uptime monitoring / Coolify health checks."""
+    """Lightweight liveness probe for local startup checks."""
     return {"status": "ok"}
 
 @app.get("/api/config")
@@ -798,7 +830,7 @@ async def get_config():
 
 @app.get("/api/projects")
 async def get_projects(limit: int = 200):
-    """List durable projects stored on this instance."""
+    """List durable projects stored on this computer."""
     return {"projects": local_projects(OUTPUT_DIR, limit=max(1, min(limit, 500)))}
 
 
@@ -856,8 +888,10 @@ async def _probe_youtube_quality(url: str) -> dict:
     def _run():
         try:
             proc = subprocess.run(
-                [sys.executable, QUALITY_PROBE_SCRIPT, "--url", url],
-                capture_output=True, timeout=75,
+                _quality_probe_command(url),
+                capture_output=True,
+                timeout=75,
+                cwd=RESOURCE_DIR,
             )
             return json.loads(proc.stdout.decode(errors="replace").strip() or "{}")
         except Exception as e:
@@ -975,7 +1009,7 @@ async def process_endpoint(
         raise HTTPException(status_code=400, detail="You must confirm you own the content or have rights to process it.")
 
     if url and DISABLE_YOUTUBE_URL:
-        raise HTTPException(status_code=403, detail="YouTube URL ingest is disabled on this deployment. Please upload a file you own.")
+        raise HTTPException(status_code=403, detail="YouTube URL ingest is disabled locally. Please upload a file you own.")
 
     # Pre-flight quality gate: probe the offered resolution before starting so
     # the user can refresh cookies or update yt-dlp instead of processing a
@@ -1012,8 +1046,9 @@ async def process_endpoint(
     job_output_dir = os.path.join(OUTPUT_DIR, job_id)
     os.makedirs(job_output_dir, exist_ok=True)
 
-    # Prepare Command
-    cmd = ["python", "-u", "main.py"] # -u for unbuffered
+    # Prepare Command. The packaged desktop backend re-enters its sidecar in
+    # worker mode; source development launches main.py with the active Python.
+    cmd = _pipeline_command()
     env = os.environ.copy()
     env["GEMINI_API_KEY"] = api_key # Override with key from request
 
@@ -1073,8 +1108,8 @@ async def process_endpoint(
         'base_url': api_base,
     }
 
-    # Resume manifest: enough to re-run this job if the container dies mid-flight
-    # (a redeploy). No secrets — the env is rebuilt from os.environ on resume.
+    # Resume manifest: enough to re-run this job after the app stops mid-flight.
+    # No secrets — the env is rebuilt from os.environ on resume.
     _write_resume_manifest(job_id, cmd, webhook_url=webhook_url, webhook_secret=webhook_secret,
                            base_url=api_base)
 
@@ -1259,7 +1294,7 @@ async def edit_clip(
         def run_edit():
             editor = VideoEditor(api_key=final_api_key)
             
-            # SAFE FILE RENAMING STRATEGY (Avoid UnicodeEncodeError in Docker)
+            # SAFE FILE RENAMING STRATEGY (Avoid UnicodeEncodeError in subprocesses)
             # Create a safe ASCII filename in the same directory
             safe_filename = f"temp_input_{req.job_id}.mp4"
             safe_input_path = os.path.join(OUTPUT_DIR, req.job_id, safe_filename)
@@ -1428,34 +1463,6 @@ async def get_clip_transcript(job_id: str, clip_index: int, request: Request):
         "durationSec": duration_sec,
         "language": transcript.get('language', 'en'),
     }
-
-
-# --- Remotion Render Proxy ---
-RENDER_SERVICE_URL = os.getenv("RENDER_SERVICE_URL", "http://renderer:3100")
-
-@app.post("/api/render")
-async def proxy_render(request: Request):
-    """Proxy render requests to the Node.js Remotion render service."""
-    import httpx
-    body = await request.json()
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(f"{RENDER_SERVICE_URL}/render", json=body)
-        result = resp.json()
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Render service unavailable: {e}")
-
-@app.get("/api/render/{render_id}")
-async def proxy_render_status(render_id: str):
-    """Proxy render status polling to the Node.js Remotion render service."""
-    import httpx
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(f"{RENDER_SERVICE_URL}/render/{render_id}")
-            return resp.json()
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Render service unavailable: {e}")
 
 
 class EffectsGenerateRequest(BaseModel):

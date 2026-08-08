@@ -21,7 +21,10 @@ def _truncate_bytes(text, max_bytes):
     return encoded[:max_bytes].decode("utf-8", "ignore")
 
 FONT_URL = "https://github.com/googlefonts/noto-fonts/raw/main/hinted/ttf/NotoSerif/NotoSerif-Bold.ttf"
-FONT_DIR = "fonts"
+RESOURCE_DIR = os.path.abspath(
+    os.environ.get("OPENSHORTS_RESOURCE_DIR", os.path.dirname(os.path.abspath(__file__)))
+)
+FONT_DIR = os.path.join(RESOURCE_DIR, "fonts")
 FONT_PATH = os.path.join(FONT_DIR, "NotoSerif-Bold.ttf")
 
 # Codepoint ranges NotoSerif has no glyphs for (would render as tofu boxes).
@@ -37,7 +40,7 @@ _EMOJI_RE = re.compile(
     "]+"
 )
 
-# Emoji-capable fonts, probed at runtime (Windows, WSL, Linux/Docker).
+# Emoji-capable fonts, probed at runtime (Windows, macOS and Linux).
 _EMOJI_FONT_CANDIDATES = [
     "C:\\Windows\\Fonts\\seguiemj.ttf",
     "/mnt/c/Windows/Fonts/seguiemj.ttf",

@@ -8,7 +8,7 @@ import types
 import pytest
 
 # main pulls in cv2/torch/mediapipe at import time; the minimal CI env lacks
-# them, so skip there. Runs fully in the container/local where deps exist.
+# them, so skip there. Runs where the optional media dependencies exist.
 main = pytest.importorskip("main")
 
 

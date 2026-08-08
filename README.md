@@ -1,28 +1,56 @@
 # OpenShorts
 
-OpenShorts is a self-hosted AI video pipeline. It turns long videos into
-vertical clips, adds subtitles and effects, and optionally publishes through
-provider APIs that you bring yourself. Projects and clip history live on the
-local `output/` volume.
+OpenShorts is a local desktop application that turns long videos into vertical
+clips, adds subtitles and effects, and can publish through provider APIs that
+you bring yourself. It uses Tauri v2 for the native shell and runs the Python
+video pipeline as a loopback-only sidecar.
 
-This repository runs as a single-tenant local service. It has no account
-login, subscription, quota, billing, or remote migration path.
+The project has no hosted account, subscription, quota, billing, or remote
+project storage. In packaged builds, projects live in the operating system's
+application-data directory; in source development, they live under `output/`.
 
-## Quick start with Docker
+## Run in development
+
+Install the Tauri prerequisites for your operating system, Python 3.11+, Node
+20+, Rust, and FFmpeg. Then create a Python environment and launch the desktop
+app:
 
 ```bash
-cp .env.example .env
-# Put GEMINI_API_KEY in .env, or send X-Gemini-Key per request.
-docker compose up --build
+cd dashboard
+npm install
+npm run setup:backend
+npm run tauri:dev
 ```
 
-Open the dashboard at <http://localhost:5175> and the API at
-<http://localhost:8000/docs>. Mount `./output` and `./uploads` on persistent
-storage in production. The backend serves local media under `/videos`.
+`setup:backend` creates `.venv` at the repository root and installs the Python
+requirements with CPU PyTorch wheels by default. `tauri:dev` automatically uses that environment, starts the
+local backend on `127.0.0.1:37831`, and opens the native window. Browser-only
+frontend work remains available with `npm run dev`; it proxies API calls to
+that same local backend.
+
+For a CUDA or ROCm build, set `OPENSHORTS_TORCH_INDEX` to the matching PyTorch
+wheel index before running `npm run setup:backend` or `npm run tauri:build`.
+
+## Build native installers
+
+Build each target on a matching operating system and architecture. The build
+packages the Python backend with PyInstaller, names the sidecar for Tauri's
+target triple, then produces the platform installer.
+
+```bash
+cd dashboard
+npm install
+npm run setup:backend
+npm run tauri:build
+```
+
+The backend bundle includes the Python application and its model libraries.
+FFmpeg remains a native system prerequisite, so it must be installed and
+available on `PATH` on each computer that processes video.
 
 ## Provider keys (BYOK)
 
-The only application-level provider environment variables are optional:
+The optional provider environment variables are:
 
 | Variable | Used for |
 | --- | --- |
@@ -33,66 +61,36 @@ The only application-level provider environment variables are optional:
 | `WHISPER_MODEL`, `WHISPER_DEVICE`, `WHISPER_COMPUTE` | Local transcription tuning |
 | `OUTPUT_MAX_GB`, `UPLOADS_MAX_GB` | Local disk caps for transient work |
 
-For browser-only BYOK, configure keys in Settings. Requests can also include
-`X-Gemini-Key` and `X-Upload-Post-Key` headers. Keys are not written to the
-project library.
+For browser-supplied BYOK, configure keys in Settings. Requests can also send
+`X-Gemini-Key` and `X-Upload-Post-Key`; keys are not stored in the project
+library.
 
-## Local persistence
+## Local API, MCP and CLI
 
-Completed jobs receive a `.openshorts-project.json` manifest in
-`output/<job_id>/`. The backend rebuilds its in-memory index from these
-manifests after a restart. `GET /api/projects` and `GET /api/history` list the
-library; `POST /api/projects/{job_id}/restore` reopens a project; edits are
-saved with `PUT /api/projects/{job_id}/state`.
-
-Deletion is explicit:
+While OpenShorts is running, its API is deliberately bound only to
+`http://127.0.0.1:37831`. The REST documentation is at `/docs` and the MCP
+endpoint is `/mcp`. This allows the bundled CLI and local automation tools to
+use the same active application without exposing a network service.
 
 ```bash
-curl -X DELETE 'http://localhost:8000/api/projects/<job_id>?confirm=true'
-```
-
-Projects do not expire automatically; only temporary uploads and transient
-files are subject to local disk cleanup.
-
-## API, MCP and CLI
-
-The REST API is documented at `/docs`. The local MCP endpoint is `/mcp` and
-exposes `process_video`, `get_job_status`, `list_clips`, `add_subtitles`, and
-`publish_clip`. It is intentionally unauthenticated for a trusted network;
-forward BYOK headers when a tool needs a provider key.
-
-```bash
-export OPENSHORTS_API_URL=http://localhost:8000
+export OPENSHORTS_API_URL=http://127.0.0.1:37831
 uvx openshorts process 'https://youtube.com/watch?v=...' --wait
 openshorts clips <job_id>
 ```
 
 Use `webhook_url` and `webhook_secret` on `/api/process` for an HMAC-signed
-completion callback. Callback clip links point to the local instance and stay
+completion callback. Callback links are local to the running app and remain
 available until the project is explicitly deleted.
 
-## Development
-
-Backend requirements are in `requirements.txt`:
+## Development checks
 
 ```bash
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app:app --reload
+python3 -m py_compile app.py mcp_server.py local_library.py desktop/backend.py
+cd dashboard && npm run build
+cd dashboard/src-tauri && cargo check
 ```
 
-Dashboard development:
-
-```bash
-cd dashboard
-npm install
-npm run dev
-```
-
-Run Python syntax checks with `python3 -m py_compile app.py mcp_server.py
-local_library.py`. The test suite contains pipeline and storage tests; some
-media tests require FFmpeg and model dependencies.
+Some media checks require FFmpeg and model dependencies.
 
 ## License
 

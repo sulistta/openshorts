@@ -1,15 +1,23 @@
 {
-  "name": "openshorts-app",
+  "name": "openshorts-desktop",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "setup:backend": "node scripts/setup-backend.mjs",
+    "dev:desktop": "node scripts/tauri-dev.mjs",
     "build": "vite build",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "prepare:desktop": "node scripts/build-sidecar.mjs",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build --config src-tauri/tauri.release.conf.json",
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-opener": "^2.0.0",
     "@remotion/media": "^4.0.447",
     "@remotion/media-utils": "^4.0.447",
     "@remotion/player": "^4.0.447",
@@ -21,6 +29,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
     "@vitejs/plugin-react": "^4.2.1",

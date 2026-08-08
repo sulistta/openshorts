@@ -3,7 +3,7 @@ import { Loader2, Download, Film, FolderOpen, Trash2 } from 'lucide-react';
 import { apiJson } from '../lib/api';
 import { getApiUrl } from '../config';
 
-// Durable single-instance library. Projects remain until the operator deletes them.
+// Durable local library. Projects remain until the user deletes them.
 export default function HistoryTab({ onReopenProject }) {
   const [videos, setVideos] = useState(null);
   const [projects, setProjects] = useState({});
@@ -69,7 +69,7 @@ export default function HistoryTab({ onReopenProject }) {
       <p className="eyebrow mb-1.5">03 · HISTORY</p>
       <h1 className="font-display lowercase text-2xl text-ink mb-2">Your library</h1>
       <p className="text-muted text-sm mb-8 lowercase">
-        All shorts generated on this instance are kept on its local volume until you explicitly delete a project.
+        All shorts generated on this computer are kept locally until you explicitly delete a project.
       </p>
 
       {error && <p className="text-danger text-sm">{error}</p>}

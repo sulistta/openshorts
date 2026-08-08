@@ -8,7 +8,7 @@ and a signed webhook returns the finished clips. No polling loop is required.
 1. In n8n, choose **Workflows → Import from file** and select
    `openshorts-clip-and-notify.json`.
 2. Set the backend URL in the **Start OpenShorts job** node (default:
-   `http://localhost:8000`). Add an `X-Gemini-Key` header if the instance does
+   `http://127.0.0.1:37831`). Keep the OpenShorts desktop app running. Add an `X-Gemini-Key` header if the app does
    not define `GEMINI_API_KEY`.
 3. Copy the production URL from **Clips ready (webhook)** and put it in the
    `webhook_url` field of the start node.
@@ -29,10 +29,10 @@ and a signed webhook returns the finished clips. No polling loop is required.
 ```
 
 Failed jobs fire the same webhook with `"event": "job.failed"` and an
-`error` field. URLs point at the local OpenShorts instance and do not expire
-unless an administrator deletes the project.
+`error` field. URLs point at the local OpenShorts app and do not expire unless
+you delete the project.
 
 ## Publishing
 
 After **One item per clip**, chain notifications or post via
-`POST /api/social/post` using the instance's Upload-Post BYOK key.
+`POST /api/social/post` using the app's Upload-Post BYOK key.

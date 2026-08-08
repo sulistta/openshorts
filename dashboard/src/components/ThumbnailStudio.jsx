@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Upload, Image, Loader2, Send, Check, Download, ArrowRight, ArrowLeft, Sparkles, Video, Type, X, Plus, MessageSquare, FileText, Youtube, AlertCircle, Settings } from 'lucide-react';
 import { getApiUrl } from '../config';
+import { openExternal } from '../lib/openExternal';
 import { apiFetch } from '../lib/api';
 import StepIndicator from './ui/StepIndicator';
 import SegmentedControl from './ui/SegmentedControl';
@@ -309,7 +310,7 @@ export default function ThumbnailStudio({ geminiApiKey, uploadPostKey, uploadUse
       URL.revokeObjectURL(blobUrl);
     } catch {
       // Fallback: open in new tab if fetch fails
-      window.open(getApiUrl(url), '_blank');
+      await openExternal(getApiUrl(url));
     }
   };
 

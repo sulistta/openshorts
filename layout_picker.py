@@ -188,7 +188,7 @@ def pick_and_apply(video_path, video_duration):
     if SHADOW:
         # One greppable line per job. Deliberately not routed through the
         # analytics module: that one is opt-in and host-scoped, and a shadow
-        # run has to work on any deployment, including self-hosted.
+        # run has to work in every local runtime.
         would = _module_flags(decision)
         print(f"[layout-shadow] decision={decision} "
               f"would_enable={','.join(would) if would else 'none'} "

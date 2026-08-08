@@ -115,8 +115,8 @@ export default function Landing({ onLaunchApp }) {
     },
     {
       icon: Shield,
-      title: "100% Self-Hosted & Private",
-      description: "Run it with Docker on your own machine — videos never leave your infrastructure."
+      title: "100% Local & Private",
+      description: "Run the desktop app on your own machine — projects stay in your local application data."
     },
     {
       icon: Monitor,
@@ -131,7 +131,7 @@ export default function Landing({ onLaunchApp }) {
     {
       icon: Bot,
       title: "MCP Server, API & CLI for AI Agents",
-      description: "Connect Claude, ChatGPT or n8n to an always-on endpoint, or run pip install openshorts and clip from the terminal. Same pipeline, no dashboard needed."
+      description: "Connect Claude, ChatGPT or n8n to the local endpoint while the desktop app is open, or use the CLI for the same pipeline."
     }
   ];
 
@@ -146,7 +146,7 @@ export default function Landing({ onLaunchApp }) {
   const faqs = [
     {
       question: "Is OpenShorts really free? What's the catch?",
-      answer: "OpenShorts is free and self-hosted: run it with Docker, bring your own provider keys, and keep projects on your own storage. There are no usage limits or subscription in this edition."
+      answer: "OpenShorts is free and local: install the desktop app, bring your own provider keys, and keep projects on your own storage. There are no usage limits or subscription in this edition."
     },
     {
       question: "What is OpenShorts and how does it work?",
@@ -154,7 +154,7 @@ export default function Landing({ onLaunchApp }) {
     },
     {
       question: "How does OpenShorts compare to Opus Clip?",
-      answer: "OpenShorts runs on your infrastructure and supports Gemini analysis, smart reframing, subtitles, dubbing and local project history."
+      answer: "OpenShorts runs locally on your computer and supports Gemini analysis, smart reframing, subtitles, dubbing and local project history."
     },
     {
       question: "How do I turn a long-form video into TikTok or Reels clips?",
@@ -178,15 +178,15 @@ export default function Landing({ onLaunchApp }) {
     },
     {
       question: "Is there a free open source clip generator?",
-      answer: "Yes — OpenShorts is open source and self-hosted. Run it with Docker, keep the project volume on your machine, and use the providers you choose."
+      answer: "Yes — OpenShorts is open source and local. Install the desktop app, keep projects on your machine, and use the providers you choose."
     },
     {
       question: "Can I automate OpenShorts from Claude, ChatGPT or n8n?",
-      answer: "Yes. OpenShorts exposes a native MCP endpoint and REST API on your instance, so an agent can submit a video, poll status, list clips and publish them. The zero-dependency CLI uses the same local API."
+      answer: "Yes. While OpenShorts is open, it exposes a local MCP endpoint and REST API so an agent can submit a video, poll status, list clips and publish them. The zero-dependency CLI uses the same local API."
     },
     {
       question: "What are the system requirements to run OpenShorts?",
-      answer: "OpenShorts runs on any system with Docker installed. The recommended setup is 8GB+ RAM and a modern multi-core CPU. GPU acceleration (NVIDIA CUDA) is optional but speeds up video processing significantly. The Docker Compose setup handles all dependencies automatically — Python 3.11, FFmpeg, YOLOv8, MediaPipe, faster-whisper, and the React dashboard. It works on Linux, macOS, and Windows (via WSL2/Docker Desktop)."
+      answer: "OpenShorts runs as a native desktop app on Linux, macOS, and Windows. The recommended setup is 8GB+ RAM, FFmpeg available on your system, and a modern multi-core CPU. GPU acceleration (NVIDIA CUDA) is optional but can speed up video processing significantly."
     }
   ];
 
@@ -225,7 +225,7 @@ export default function Landing({ onLaunchApp }) {
       <section className="hero-blueprint relative overflow-clip border-b border-rule pt-32 pb-20 px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_auto] gap-14 items-center">
           <div className="min-w-0">
-            <p className="eyebrow mb-6">00 · AI Clip Generator · Self-Hosted</p>
+            <p className="eyebrow mb-6">00 · AI Clip Generator · Desktop</p>
 
             <h1 className="hero-h1 mb-6">
               the free open source ai <em>clip generator</em>, built to clip what people actually watch.
@@ -377,20 +377,20 @@ export default function Landing({ onLaunchApp }) {
         </div>
       </section>
 
-      {/* Self-hosted deployment */}
+      {/* Local desktop installation */}
       <section className="py-20 px-6 border-t border-rule">
         <div className="max-w-4xl mx-auto">
-          <SectionHeader eyebrow="02 · Deploy" title="Run it on your machine">
-            OpenShorts is designed for a private, durable self-hosted instance. Keep rendered projects on your own volume and bring the API keys you choose to use.
+          <SectionHeader eyebrow="02 · Desktop" title="Run it on your machine">
+            OpenShorts is a private desktop application. Keep rendered projects in your local application data and bring the API keys you choose to use.
           </SectionHeader>
           <div className="card p-8 flex flex-col">
               <div className="flex flex-wrap items-center gap-3 mb-3">
                 <Github size={18} className="text-muted" />
-                <h3 className="font-display text-2xl lowercase text-ink">self-hosted — for everyone</h3>
-                <span className="readout border border-rule rounded-full px-2.5 py-1">Free · Docker</span>
+                <h3 className="font-display text-2xl lowercase text-ink">desktop — for everyone</h3>
+                <span className="readout border border-rule rounded-full px-2.5 py-1">Free · Desktop</span>
               </div>
               <ul className="space-y-1.5 mb-6 flex-1">
-                {['Your machine: 5 to 8 min on a typical CPU', 'Bring your own Gemini and ElevenLabs keys', 'You install it, you maintain it, you back it up', 'Free forever, and always will be'].map((f, i) => (
+                {['Your machine: 5 to 8 min on a typical CPU', 'Bring your own Gemini and ElevenLabs keys', 'Local projects remain on your computer', 'Free forever, and always will be'].map((f, i) => (
                   <li key={i} className="flex items-center gap-2 text-sm text-muted"><Check size={14} className="text-ok shrink-0" />{f}</li>
                 ))}
               </ul>
@@ -515,8 +515,8 @@ export default function Landing({ onLaunchApp }) {
               { name: "MediaPipe", desc: "Face Tracking" },
               { name: "FFmpeg", desc: "Video Processing" },
               { name: "ElevenLabs", desc: "Voice & TTS" },
-              { name: "React + Vite", desc: "Dashboard" },
-              { name: "Docker", desc: "Deployment" }
+              { name: "React + Vite", desc: "Interface" },
+              { name: "Tauri v2", desc: "Desktop" }
             ].map((tech, i) => (
               <div key={i} className="border border-rule rounded-input bg-paper2 px-4 py-3 text-center">
                 <div className="readout text-ink2">{tech.name}</div>
@@ -585,7 +585,7 @@ export default function Landing({ onLaunchApp }) {
       <section className="py-24 px-6 border-t border-rule">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="font-display text-4xl md:text-5xl lowercase text-ink tracking-tight mb-5">start creating viral videos today.</h2>
-          <p className="text-muted mb-10 max-w-xl mx-auto leading-relaxed lowercase">self-host free with docker · durable local projects · bring your own keys.</p>
+          <p className="text-muted mb-10 max-w-xl mx-auto leading-relaxed lowercase">free desktop app · durable local projects · bring your own keys.</p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <button onClick={onLaunchApp} className="btn-primary whitespace-nowrap">
               launch openshorts

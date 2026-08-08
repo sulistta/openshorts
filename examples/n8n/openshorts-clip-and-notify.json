@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## OpenShorts + n8n, the whole loop\n\n**One HTTP request starts the job, one signed webhook ends it.** No polling loop, no wait nodes.\n\n### Setup\n1. Set the local backend URL (default `http://localhost:8000`) in the *Start OpenShorts job* node. Add an `X-Gemini-Key` header only when the instance has no `GEMINI_API_KEY`.\n2. Open the *Clips ready* webhook node, copy its production URL, and paste it as `webhook_url` in the start node body.\n3. Optional: set `webhook_secret`; callbacks are signed with HMAC-SHA256.\n\n### What you get back\n`event`, `job_id`, `status`, and `clips[]` with local `video_url` and download endpoints. Failed jobs also fire the webhook with an `error` field.",
+        "content": "## OpenShorts + n8n, the whole loop\n\n**One HTTP request starts the job, one signed webhook ends it.** No polling loop, no wait nodes.\n\n### Setup\n1. Keep the OpenShorts desktop app running and set the local backend URL (default `http://127.0.0.1:37831`) in the *Start OpenShorts job* node. Add an `X-Gemini-Key` header only when the app has no `GEMINI_API_KEY`.\n2. Open the *Clips ready* webhook node, copy its production URL, and paste it as `webhook_url` in the start node body.\n3. Optional: set `webhook_secret`; callbacks are signed with HMAC-SHA256.\n\n### What you get back\n`event`, `job_id`, `status`, and `clips[]` with local `video_url` and download endpoints. Failed jobs also fire the webhook with an `error` field.",
         "height": 460,
         "width": 480
       },
@@ -36,7 +36,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:8000/api/process",
+        "url": "http://127.0.0.1:37831/api/process",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"url\": \"{{ $json['Video URL'] }}\",\n  \"acknowledged\": true,\n  \"webhook_url\": \"PASTE_THE_PRODUCTION_URL_OF_THE_CLIPS-READY_WEBHOOK_NODE_HERE\",\n  \"webhook_secret\": \"change-me\"\n}",

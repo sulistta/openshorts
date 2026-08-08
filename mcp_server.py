@@ -8,8 +8,8 @@ Tools don't reimplement anything: each one is an in-process HTTP call back into
 this same app (httpx ASGITransport). The single-tenant server accepts BYOK
 headers such as ``X-Gemini-Key`` and ``X-Upload-Post-Key`` when needed.
 
-Connect with any MCP client pointed at your instance, for example:
-    claude mcp add --transport http openshorts http://localhost:8000/mcp
+Connect with any MCP client pointed at the local desktop endpoint, for example:
+    claude mcp add --transport http openshorts http://127.0.0.1:37831/mcp
 """
 import json
 import os

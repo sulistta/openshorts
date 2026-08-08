@@ -1,18 +1,18 @@
 # OpenShorts contributor notes
 
-OpenShorts is a single-tenant, self-hosted video clipping application. Keep
-the backend, dashboard, MCP server, CLI, and Docker setup aligned with the
-local-only contract.
+OpenShorts is a local desktop video clipping application. Keep the backend,
+desktop shell, MCP server, and CLI aligned with the loopback-only contract.
 
 ## Runtime boundaries
 
-- Durable projects live below `output/`.
+- In the packaged desktop app, durable projects live in the operating system's
+  application-data directory; source development uses `output/`.
 - A project manifest is `.openshorts-project.json`; recovery rebuilds the
   in-memory job index from manifests at startup.
 - Temporary uploads may be cleaned up to enforce disk caps. Durable projects
   must not expire automatically.
 - The dashboard stores BYOK provider keys locally and sends them in headers.
-- The trusted-network deployment has no application login or bearer token.
+- The loopback API has no application login or bearer token.
 
 ## API contract
 

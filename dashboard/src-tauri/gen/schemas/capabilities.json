@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"Capability for the primary OpenShorts desktop window.","local":true,"windows":["main"],"permissions":["core:default","opener:default"]}}

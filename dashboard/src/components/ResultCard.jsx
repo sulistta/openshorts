@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, Share2, Instagram, Youtube, Video, AlertCircle, Loader2, Copy, Check, Wand2, Type, Calendar, Languages, FileText, Link2 } from 'lucide-react';
 import { getApiUrl } from '../config';
+import { openExternal } from '../lib/openExternal';
 import { apiFetch } from '../lib/api';
 import SubtitleModal from './SubtitleModal';
 import HookModal from './HookModal';
@@ -56,7 +57,7 @@ export default function ResultCard({ clip, index, jobId, durableUrl, uploadPostK
             document.body.removeChild(a);
         } catch (err) {
             console.error('Download error:', err);
-            window.open(currentVideoUrl, '_blank');
+            void openExternal(currentVideoUrl);
         }
     };
     // Latest file that exists ON THE SERVER (blob: previews don't count).
@@ -164,7 +165,7 @@ export default function ResultCard({ clip, index, jobId, durableUrl, uploadPostK
 
     const handleConnectAccounts = () => {
         setShowModal(false);
-        window.open('https://app.upload-post.com', '_blank', 'noopener');
+        void openExternal('https://app.upload-post.com');
     };
 
     // Initialize/Reset form when modal opens
@@ -184,7 +185,7 @@ export default function ResultCard({ clip, index, jobId, durableUrl, uploadPostK
                 });
             }
         }
-    }, [showModal, clip]);
+    }, [showModal, clip, knownConnections, connectedPlatforms]);
 
     const handleAutoEdit = async () => {
         setIsEditing(true);

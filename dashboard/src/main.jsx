@@ -5,7 +5,17 @@ import App from './App.jsx'
 import Landing from './Landing.jsx'
 import Legal from './Legal.jsx'
 
-function Root() {
+async function configureApi() {
+  if (!window.__TAURI_INTERNALS__) {
+    window.__OPENSHORTS_API_URL__ = import.meta.env.VITE_API_URL || '';
+    return;
+  }
+
+  const { invoke } = await import('@tauri-apps/api/core');
+  window.__OPENSHORTS_API_URL__ = await invoke('backend_url');
+}
+
+export function Root() {
   const resolveView = () => {
     const hash = window.location.hash || '';
     if (hash === '#legal') return 'legal';
@@ -34,8 +44,16 @@ function Root() {
   return <Landing onLaunchApp={handleLaunchApp} />;
 }
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <Root />
-  </StrictMode>,
-)
+async function bootstrap() {
+  await configureApi();
+  createRoot(document.getElementById('root')).render(
+    <StrictMode>
+      <Root />
+    </StrictMode>,
+  );
+}
+
+bootstrap().catch((error) => {
+  console.error('Unable to connect OpenShorts to its local backend.', error);
+  document.getElementById('root').textContent = 'OpenShorts could not start its local backend.';
+});

@@ -33,6 +33,11 @@ output/
 # Cache dirs
 .cache/
 .config/
+# Desktop build artifacts
+dashboard/src-tauri/target/
+dashboard/src-tauri/binaries/*
+!dashboard/src-tauri/binaries/.gitignore
+build/pyinstaller/
 # Multi-agent Skills
 .agents/
 .agent/

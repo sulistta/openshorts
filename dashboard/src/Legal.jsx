@@ -33,21 +33,21 @@ export default function Legal() {
         <p className="readout mb-12">Last updated: {LAST_UPDATED}</p>
 
         <Section title="The short version">
-          <p>OpenShorts is self-hosted software. You run the API and dashboard on infrastructure you control, choose the provider keys you use, and decide who can access the instance.</p>
+          <p>OpenShorts is local desktop software. It runs its API on your computer, lets you choose the provider keys you use, and keeps projects under your local application data.</p>
           <p>This edition does not create user accounts or apply automatic retention to durable projects.</p>
         </Section>
 
         <Section title="Your content and keys">
           <p>Only process videos you own or have permission to use. You are responsible for copyright, privacy, and any content sent to third-party providers.</p>
-          <p>Provider keys entered in the dashboard stay in the browser and are sent as request headers when needed. Server-side keys such as <code>GEMINI_API_KEY</code> are controlled by the instance administrator.</p>
+          <p>Provider keys entered in the dashboard stay in the browser and are sent as request headers when needed. Keys such as <code>GEMINI_API_KEY</code> can also be configured in the local application environment.</p>
         </Section>
 
         <Section title="Local storage and deletion">
           <ul className="list-disc pl-6 space-y-2">
-            <li>Projects, clip manifests, and edits are stored under the local <code>output/</code> volume.</li>
+            <li>Projects, clip manifests, and edits are stored in OpenShorts' local application-data directory.</li>
             <li>Projects do not expire automatically. Use the dashboard or DELETE API endpoint for explicit deletion.</li>
-            <li>Temporary uploads and transient processing files may be cleaned up according to the administrator's disk limits.</li>
-            <li>Access logs and backups are controlled by the administrator.</li>
+            <li>Temporary uploads and transient processing files may be cleaned up according to your disk limits.</li>
+            <li>Access logs and backups remain under your local control.</li>
           </ul>
         </Section>
 
@@ -56,7 +56,7 @@ export default function Legal() {
         </Section>
 
         <Section title="No warranty">
-          <p>The software is provided as-is, without a guarantee of uptime, accuracy, or fitness for a particular purpose. The administrator is responsible for securing the deployment, network, backups, and access controls.</p>
+          <p>The software is provided as-is, without a guarantee of uptime, accuracy, or fitness for a particular purpose. You are responsible for local backups and access to your computer.</p>
         </Section>
 
         <Section title="Contact and changes">

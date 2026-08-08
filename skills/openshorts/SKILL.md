@@ -1,7 +1,7 @@
 ---
 name: openshorts
 version: 1.0.0
-description: Use a self-hosted OpenShorts instance to turn long videos into vertical clips, edit captions, and optionally publish them.
+description: Use the local OpenShorts desktop app to turn long videos into vertical clips, edit captions, and optionally publish them.
 homepage: https://github.com/mutonby/openshorts
 metadata:
   openclaw:
@@ -19,8 +19,8 @@ Jobs are asynchronous: submit, then use a webhook or poll until completion.
 
 ## Connect
 
-Point MCP or REST at the instance managed by the user. The default is
-`http://localhost:8000`; there is no account login or service API key.
+Point MCP or REST at the running desktop app. The default is
+`http://127.0.0.1:37831`; there is no account login or service API key.
 Provider BYOK headers are optional:
 
 - `X-Gemini-Key` for AI analysis and editing
@@ -42,14 +42,14 @@ The MCP server exposes `process_video`, `get_job_status`, `list_clips`,
 ## Rules
 
 - Only process content the user owns or is authorized to use.
-- Projects are durable on the local output volume; deletion is explicit through
-  the dashboard or DELETE API endpoint.
+- Projects are durable in the local application-data directory; deletion is
+  explicit through the dashboard or DELETE API endpoint.
 - Keep provider costs and credentials under the user's own accounts.
 
 ## CLI shortcut
 
 ```bash
-export OPENSHORTS_API_URL=http://localhost:8000
+export OPENSHORTS_API_URL=http://127.0.0.1:37831
 uvx openshorts process <url> --wait
 openshorts clips <job_id>
 openshorts publish <job_id> 0 --platforms tiktok

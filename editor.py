@@ -443,7 +443,7 @@ class VideoEditor:
 
         # Use explicit environment with UTF-8 to avoid ascii errors in subprocess
         env = os.environ.copy()
-        # On some minimal docker images, we need to ensure we use a UTF-8 locale
+        # Ensure a UTF-8 locale for FFmpeg and subtitle processing.
         # Try C.UTF-8 first, fallback to en_US.UTF-8 if available, but C.UTF-8 is usually safer for minimal
         env["LANG"] = "C.UTF-8"
         env["LC_ALL"] = "C.UTF-8"
