@@ -1,0 +1,3 @@
+# OpenShorts self-hosted instance
+User-agent: *
+Allow: /

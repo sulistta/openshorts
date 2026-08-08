@@ -1,0 +1,68 @@
+import React from 'react';
+import { ArrowLeft } from 'lucide-react';
+
+const LAST_UPDATED = '2026-08-06';
+const ISSUES_URL = 'https://github.com/mutonby/openshorts/issues';
+
+function Section({ title, children }) {
+  return (
+    <section className="mb-10">
+      <h2 className="font-display lowercase text-xl text-ink mb-3">{title}</h2>
+      <div className="text-ink2 leading-relaxed space-y-3 text-sm">{children}</div>
+    </section>
+  );
+}
+
+function A({ href, children, external }) {
+  return <a className="underline underline-offset-2 hover:text-brass transition-colors" href={href}
+    {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{children}</a>;
+}
+
+export default function Legal() {
+  return (
+    <div className="min-h-screen bg-paper text-ink2">
+      <header className="border-b border-rule sticky top-0 bg-paper z-10">
+        <div className="max-w-[65ch] mx-auto px-6 py-3 flex items-center">
+          <button onClick={() => { window.location.hash = ''; }} className="btn-quiet">
+            <ArrowLeft size={16} /> Back
+          </button>
+        </div>
+      </header>
+      <main className="max-w-[65ch] mx-auto px-6 py-12">
+        <h1 className="font-display lowercase text-3xl md:text-4xl text-ink mb-3">Terms &amp; Privacy</h1>
+        <p className="readout mb-12">Last updated: {LAST_UPDATED}</p>
+
+        <Section title="The short version">
+          <p>OpenShorts is self-hosted software. You run the API and dashboard on infrastructure you control, choose the provider keys you use, and decide who can access the instance.</p>
+          <p>This edition does not create user accounts or apply automatic retention to durable projects.</p>
+        </Section>
+
+        <Section title="Your content and keys">
+          <p>Only process videos you own or have permission to use. You are responsible for copyright, privacy, and any content sent to third-party providers.</p>
+          <p>Provider keys entered in the dashboard stay in the browser and are sent as request headers when needed. Server-side keys such as <code>GEMINI_API_KEY</code> are controlled by the instance administrator.</p>
+        </Section>
+
+        <Section title="Local storage and deletion">
+          <ul className="list-disc pl-6 space-y-2">
+            <li>Projects, clip manifests, edits, actor images, and gallery videos are stored under the local <code>output/</code> volume.</li>
+            <li>Projects and gallery entries do not expire automatically. Use the dashboard or DELETE API endpoints for explicit deletion.</li>
+            <li>Temporary uploads and transient processing files may be cleaned up according to the administrator's disk limits.</li>
+            <li>Access logs and backups are controlled by the administrator.</li>
+          </ul>
+        </Section>
+
+        <Section title="Third-party providers">
+          <p>When enabled, Gemini, ElevenLabs, fal.ai, Upload-Post, YouTube, and other integrations receive the data required for the requested operation. Their terms and privacy policies apply to those requests.</p>
+        </Section>
+
+        <Section title="No warranty">
+          <p>The software is provided as-is, without a guarantee of uptime, accuracy, or fitness for a particular purpose. The administrator is responsible for securing the deployment, network, backups, and access controls.</p>
+        </Section>
+
+        <Section title="Contact and changes">
+          <p>For project issues and questions, use <A href={ISSUES_URL} external>GitHub Issues</A>. This document may change with the software.</p>
+        </Section>
+      </main>
+    </div>
+  );
+}
