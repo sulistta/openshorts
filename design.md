@@ -1,165 +1,64 @@
-# Design — OpenShorts
+# OpenShorts desktop design system
 
-A locked design system for this app (dashboard + landing). Every page redesign
-reads this file before emitting code. Do not regenerate per page — extend or
-amend this file when the system needs to grow.
+OpenShorts is a local desktop video workspace. The interface is a focused workbench, not a marketing website. The system is dark-only, quiet, and information-dense without feeling cramped.
 
-Theme: **Lumen · Night Foundry** (Hallmark catalog, atmospheric genre).
-Register: premium AI-tool instrument (Modal / Anthropic / ElevenLabs school).
-The product's own numbers — timecodes, aspect ratios, clip counts, costs —
-are the decoration: they render as UPPERCASE mono readouts.
+## Product surface
 
-## Genre
+The single Tauri window opens directly to the workspace. Primary areas are:
 
-atmospheric
+- **Clip Generator** — choose a local file or video URL, process it, review generated clips, and edit/publish them.
+- **YouTube Studio** — move through the existing title, thumbnail, description, and publish workflow.
+- **Library** — reopen durable local projects, preview clips, download, and explicitly delete.
+- **Settings** — manage BYOK providers, publishing profiles, privacy, storage, and legal text.
 
-## Macrostructure family
+There is no Home/Landing page, SEO route, marketing hero, feature grid, FAQ route, or hash-based navigation.
 
-- Marketing pages (Landing): **Marquee Hero, Lumen-canonical** — lowercase
-  serif headline hero-left with one coral verb-landmark, hand-built CSS
-  apparatus hero-right, meter strip below the fold, then sections with mono
-  eyebrows. Nav: N9 edge-aligned minimal. Footer: Ft5 Statement.
-- App pages (dashboard tabs, modals): **Workbench** — small functional
-  headings, hairline cards lit from within, mono readouts, zero enrichment.
-  Function carries the page.
-- Content pages (Legal): **Long Document** — single column, 65ch measure,
-  inline headings, typographic links.
+## Visual language
 
-## Theme tokens (Night Foundry)
+- Dark fixed appearance with neutral charcoal surfaces.
+- System UI typography: `ui-sans-serif`, `-apple-system`, `BlinkMacSystemFont`, and `Segoe UI` fallbacks.
+- One restrained warm accent derived from the OpenShorts icon; semantic green, amber, and red are reserved for state.
+- Hairline separators, flat surfaces, restrained shadows, and clear selected states.
+- No gradients, glow effects, blueprint grids, glassmorphism, fake browser chrome, marketing counters, or decorative HUDs.
+- Sentence-case interface copy. Preserve user-generated titles, captions, transcripts, keys, filenames, and logs exactly.
+- Native controls use compact rectangular radii; pills are reserved for status badges.
 
-- `--color-paper`      oklch(13% 0.014 265)   — page canvas, late-night violet
-- `--color-paper-2`    oklch(16.5% 0.015 265) — elevated surface (cards, modals, sidebar)
-- `--color-paper-3`    oklch(20% 0.016 265)   — hover surface / inset chips
-- `--color-ink`        oklch(96% 0.006 262)   — headlines, near-white
-- `--color-ink-2`      oklch(86% 0.01 262)    — body text
-- `--color-muted`      oklch(64% 0.012 262)   — secondary text
-- `--color-rule`       oklch(96% 0.006 262 / 0.08) — hairline borders
-- `--color-rule-2`     oklch(96% 0.006 262 / 0.14) — stronger hairline
-- `--rule-blueprint`   oklch(96% 0.006 262 / 0.04) — blueprint grid lines
-- `--color-accent`     oklch(76% 0.17 50)     — molten brass (THE accent)
-- `--color-accent-ink` oklch(17% 0.03 50)     — text on brass fills
-- `--color-accent-2`   oklch(68% 0.16 18)     — coral chord (verb landmark ONLY + rare secondary)
-- `--color-glow`       oklch(80% 0.16 50 / 0.42) — apparatus halo
-- `--color-paper-emit` oklch(76% 0.17 50 / 0.04) — inner-emission wash
-- `--color-focus`      oklch(76% 0.17 50)     — focus rings
-- `--color-ok`         oklch(75% 0.11 150)    — success states
-- `--color-warn`       oklch(78% 0.14 75)     — warnings (keys missing, low quality)
-- `--color-danger`     oklch(66% 0.18 25)     — errors, destructive
+## Window chrome
 
-Tailwind names: `paper, paper2, paper3, ink, ink2, muted, brass, brassink,
-coral, ok, warn, danger` (+ legacy aliases `background→paper`, `surface→paper2`,
-`primary→brass`, `accent→coral` so untouched files degrade gracefully).
-Borders: use `border-rule` / `border-rule2` utilities (defined in index.css).
+The desktop build uses a custom unified titlebar with a real drag region and accessible minimize, maximize/restore, and close controls. Tauri owns window actions; browser/Vite mode hides those controls. The titlebar must not imitate Safari or draw fake traffic-light chrome.
 
-## Typography
+The Tauri window remains resizable with a minimum of 1024×720. Keep the local sidecar lifecycle and loopback URL bootstrap unchanged.
 
-- Display: **Instrument Serif 400**, `font-display`, always roman (never italic),
-  **lowercase**, tracking -0.032em, line-height 1.02.
-- Body: **Geist** 400/500/600, `font-body`.
-- Mono: **JetBrains Mono** 400/500, `font-mono` — UPPERCASE labels only.
-- Two-register rule: UI prose (headings, buttons, nav, empty states, helper
-  text) renders **lowercase**; mono labels (eyebrows, badges, readouts, stat
-  labels, keyboard hints) render **UPPERCASE** 10.5–11px tracking 0.10em at
-  ~55% opacity. That contrast is the typographic signature.
-- **NEVER lowercase user content**: video titles, captions, transcripts,
-  descriptions, emails, API keys, log output, filenames, prices in legal copy.
-  Apply `lowercase` class per-element on UI chrome only — no global
-  text-transform on body.
-- Numerals: `font-variant-numeric: tabular-nums` wherever numbers appear
-  (`tabular-nums` utility). Big stats: Instrument Serif + tabular-nums.
-- Type scale anchor: `--text-display: clamp(3rem, 6vw + 1rem, 6rem)` (landing
-  hero only). App headings stay small: text-xl/2xl max, serif lowercase.
+## Tokens
 
-## Spacing
+The canonical values live in `dashboard/src/tokens.css`. The semantic groups are:
 
-4-point scale via Tailwind defaults (p-2/3/4/6/8/12/16). No arbitrary
-`text-[9px]`-style values — minimum readable label is 10.5px (`text-micro`
-utility). Radii: `--radius-card: 10px` (rounded-card), `--radius-input: 8px`
-(rounded-input), pills `rounded-full` for CTAs and status chips only.
+- surfaces: `paper`, `paper-2`, `paper-3`, `paper-4`
+- content: `ink`, `ink-2`, `muted`, `faint`
+- interaction: `accent`, `focus`, `ok`, `warn`, `danger`
+- geometry: `radius-card`, `radius-panel`, `radius-input`, `radius-control`
+- motion: `ease-out`, `ease-in-out`, `dur-fast`, `dur-short`, `dur-panel`
 
-## Motion
+Tailwind aliases remain temporarily for feature components while they migrate. New code must use semantic tokens and shared primitives.
 
-- Easings: `--ease-out: cubic-bezier(0.16, 1, 0.3, 1)` only. Never `ease`.
-- Durations: 220ms UI state, 600ms section reveals, 4s apparatus pulse.
-- Reveal pattern: fade only (`animate-fade`), optional 12px translateY on
-  section entry. No slide-ins, no bounce, no scale-pops.
-- Cards hover: `translateY(-4px)` + inner-glow brighten, 220ms.
-- Reduced motion: everything collapses to instant final state.
-- Focus ring: 2px brass, appears INSTANTLY (never animated).
+## Interaction rules
 
-## Microinteractions stance
+- Every interactive control has visible default, hover, focus-visible, active, disabled, loading, error, and success states where applicable.
+- Keyboard focus is never hidden or animated.
+- Sheets trap focus, close on Escape, close on backdrop click when safe, and restore focus to the opener.
+- Deletions require an explicit confirmation before the existing `confirm=true` API request.
+- Success is quiet and inline; avoid celebratory banners and star prompts.
+- Respect `prefers-reduced-motion`.
 
-- Silent success (inline check, quiet state change) — never celebratory.
-- Buttons: `active:translate-y-px`, no scale tricks.
-- Hover tooltips delay 800ms; focus tooltips 0ms.
-- Loaders: `Loader2` lucide spin is fine, tinted `text-muted` or `text-brass`.
+## Functional boundaries
 
-## CTA voice
+Do not change these as part of a visual redesign:
 
-- Primary: `.btn-primary` — brass fill, `text-brassink`, `rounded-full`,
-  lowercase label, font-medium. One per view section.
-- Secondary: `.btn-ghost` — hairline `border-rule2`, ink text, rounded-full.
-- Tertiary/utility: `.btn-quiet` — `bg-paper3` fill, no border.
-- Destructive: `.btn-danger` — danger outline, fills on hover.
-- Labels are verbs, lowercase: "start clipping", "generate", "publish",
-  "download". Never "Get Started!", never Title Case.
+- Tauri → local backend URL bootstrap and `127.0.0.1` loopback binding.
+- `getApiUrl`, `apiFetch`, and `apiJson` behavior.
+- Existing API paths and BYOK request headers.
+- `gemini_key`, `uploadPostKey_v3`, `elevenLabsKey_v1`, `uploadUserId`, and `openshorts_session` storage formats.
+- Durable project manifests, restore, local library URLs, and explicit deletion.
+- Remotion browser rendering and the server edit chain.
 
-## Component recipes (shared — use these, don't reinvent)
-
-- `.card` — hairline border + inner emission (radial brass 4–5%), rounded-card,
-  bg-paper2. Hover variant `.card-hover` lifts and brightens. Replaces ALL
-  glass-panel / bg-surface/50 / backdrop-blur cards.
-- `.eyebrow` — mono UPPERCASE micro label. Section pattern: eyebrow stacked
-  ABOVE the heading, same column (`01 · TOOLS` then the serif heading). Never
-  tag-left/heading-right.
-- `<Modal>` from `src/components/ui/Modal.jsx` — the ONLY modal shell
-  (overlay plain `bg-black/70`, NO backdrop-blur; panel bg-paper2 hairline).
-- `<SegmentedControl>` from `src/components/ui/SegmentedControl.jsx` — all
-  option-button grids (position/size/animation pickers, platform toggles).
-  Active state = brass hairline + paper3 fill + ink text. Never bg-white
-  text-black, never per-feature colors.
-- `<StepIndicator>` from `src/components/ui/StepIndicator.jsx` — the single
-  wizard stepper. Mono ordinals.
-- `.input-field` — inset bg-paper, hairline, focus brass ring (redefined in
-  index.css; existing class name kept).
-- `.readout` — mono UPPERCASE value chip for machine data (timecodes, costs,
-  ratios, model names): `00:42 · 9:16 · $0.65`.
-- Status: `.badge-ok` / `.badge-warn` / `.badge-danger` — tinted 10% fills,
-  mono uppercase.
-
-## What pages MUST share
-
-- Single accent: brass. Coral ONLY as the headline verb-landmark (landing) and
-  at most one small secondary highlight per view. NOTHING ELSE gets a hue.
-- Zero gradients (text or background). Zero glassmorphism / backdrop-blur
-  panels. Zero per-feature identity colors (the old violet/emerald/amber/teal
-  per-tab coding is retired — tools are differentiated by mono eyebrow ordinals,
-  not by hue).
-- The two-register typography (lowercase prose / UPPERCASE mono labels).
-- The CTA voice, radii, hairline card language.
-- English copy everywhere (ScheduleWeekModal migrates from Spanish).
-- Lucide icons at 16–18px, `text-muted` default, brass when active.
-
-## What pages MAY differ on
-
-- Landing may use enrichment: ONE hand-built CSS apparatus (filament chamber
-  reading as a 9:16 clip instrument) + blueprint grid + meter strip. App pages
-  get NONE of these (no grid bg, no apparatus, no meter) — except ProcessingAnimation,
-  which keeps its scanner HUD but re-tinted to brass/ink tokens.
-- Legal is typography-only.
-
-## Hard bans (Lumen)
-
-No italics anywhere. No gradient text. No gradient buttons. No backdrop-blur.
-No glowing orbs. No invented metrics (existing cited stats/prices are the
-brief's real copy — keep them). No emoji as icons in chrome. No rounded-2xl
-soup — use rounded-card/rounded-input/rounded-full deliberately. No
-`bg-[#121214]`-style hardcoded colors — tokens only. No Title Case UI copy.
-
-## Functional contract (NEVER break)
-
-Hash routing (`#app`, `#legal`, `#features`, `#how-it-works`, `#faq`), localStorage
-keys (`gemini_key`, `uploadPostKey_v3`, `elevenLabsKey_v1`, `uploadUserId`,
-`openshorts_session`, `openshorts_skip_landing`), API calls and
-BYOK headers, and Remotion preview/render wiring are functional contracts.
-Redesign is classes + markup structure only.
+Provider, GitHub, and documentation links should use `openExternal` in the desktop build. Media and loopback URLs remain in-app.

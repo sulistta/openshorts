@@ -1,53 +1,65 @@
-/* Hallmark · genre: atmospheric · theme: lumen (night foundry) · design-system: design.md · designed-as-app
- * macrostructure: Marquee Hero (marketing) / Workbench (app) / Long Document (content)
- * nav: N9 edge-aligned · footer: Ft5 statement · enrichment: filament apparatus (landing only)
- * pre-emit critique: P5 H4 E4 S5 R5 V4
- */
+/* OpenShorts desktop · dark system · native workbench */
 
 :root {
-  /* paper */
-  --color-paper: oklch(13% 0.014 265);
-  --color-paper-2: oklch(16.5% 0.015 265);
-  --color-paper-3: oklch(20% 0.016 265);
+  color-scheme: dark;
 
-  /* ink */
+  /* Surfaces */
+  --color-paper: oklch(16% 0.014 265);
+  --color-paper-2: oklch(19% 0.014 265);
+  --color-paper-3: oklch(23% 0.016 265);
+  --color-paper-4: oklch(27% 0.018 265);
+
+  /* Content */
   --color-ink: oklch(96% 0.006 262);
-  --color-ink-2: oklch(86% 0.01 262);
-  --color-muted: oklch(64% 0.012 262);
+  --color-ink-2: oklch(84% 0.01 262);
+  --color-muted: oklch(63% 0.012 262);
+  --color-faint: oklch(53% 0.012 262);
 
-  /* rules */
-  --color-rule: oklch(96% 0.006 262 / 0.08);
-  --color-rule-2: oklch(96% 0.006 262 / 0.14);
-  --rule-blueprint: oklch(96% 0.006 262 / 0.04);
+  /* Rules and focus */
+  --color-rule: oklch(96% 0.006 262 / 0.09);
+  --color-rule-2: oklch(96% 0.006 262 / 0.16);
+  --color-focus: oklch(78% 0.13 78);
 
-  /* accents */
-  --color-accent: oklch(76% 0.17 50);
-  --color-accent-ink: oklch(17% 0.03 50);
-  --color-accent-2: oklch(68% 0.16 18);
-  --color-glow: oklch(80% 0.16 50 / 0.42);
-  --color-paper-emit: oklch(76% 0.17 50 / 0.04);
-  --color-focus: oklch(76% 0.17 50);
+  /* Brand and semantic states */
+  --color-accent: oklch(78% 0.13 78);
+  --color-accent-ink: oklch(20% 0.03 78);
+  --color-ok: oklch(76% 0.12 150);
+  --color-warn: oklch(80% 0.14 82);
+  --color-danger: oklch(70% 0.17 25);
 
-  /* states */
-  --color-ok: oklch(75% 0.11 150);
-  --color-danger: oklch(66% 0.18 25);
-  --color-warn: oklch(78% 0.14 75);
+  /* Compatibility aliases consumed by feature components */
+  --color-brass: var(--color-accent);
+  --color-brass-ink: var(--color-accent-ink);
+  --color-coral: var(--color-accent);
+  --rule-blueprint: var(--color-rule);
+  --color-glow: color-mix(in oklab, var(--color-accent) 22%, transparent);
+  --color-paper-emit: color-mix(in oklab, var(--color-accent) 4%, transparent);
 
-  /* type */
-  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
-  --font-body: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  --text-display: clamp(3rem, 6vw + 1rem, 6rem);
-  --tracking-display: -0.032em;
-  --tracking-micro: 0.10em;
+  /* Typography */
+  --font-body: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* geometry */
-  --radius-card: 10px;
-  --radius-input: 8px;
+  /* Geometry */
+  --radius-card: 14px;
+  --radius-panel: 18px;
+  --radius-input: 10px;
+  --radius-control: 9px;
 
-  /* motion */
+  /* Depth */
+  --shadow-panel: 0 16px 44px oklch(0% 0 0 / 0.24);
+  --shadow-popover: 0 22px 64px oklch(0% 0 0 / 0.38);
+
+  /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --dur-short: 220ms;
-  --dur-reveal: 600ms;
-  --dur-pulse: 4s;
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 140ms;
+  --dur-short: 180ms;
+  --dur-panel: 240ms;
+
+  /* Layout */
+  --titlebar-height: 42px;
+  --sidebar-width: 236px;
+  --sidebar-compact-width: 72px;
+  --control-height: 36px;
 }

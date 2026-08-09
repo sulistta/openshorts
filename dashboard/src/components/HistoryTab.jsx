@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Loader2, Download, Film, FolderOpen, Trash2 } from 'lucide-react';
 import { apiJson } from '../lib/api';
 import { getApiUrl } from '../config';
+import ConfirmDialog from './ui/ConfirmDialog';
 
 // Durable local library. Projects remain until the user deletes them.
 export default function HistoryTab({ onReopenProject }) {
@@ -10,6 +11,8 @@ export default function HistoryTab({ onReopenProject }) {
   const [reopening, setReopening] = useState(null);
   const [reopenError, setReopenError] = useState('');
   const [error, setError] = useState('');
+  const [deleteJobId, setDeleteJobId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     apiJson('/api/history')
@@ -47,16 +50,22 @@ export default function HistoryTab({ onReopenProject }) {
     }
   };
 
-  const handleDelete = async (jobId) => {
-    if (!window.confirm('Delete this project and all of its local clips?')) return;
+  const handleDelete = async () => {
+    if (!deleteJobId) return;
+    setDeleting(true);
     try {
-      await apiJson(`/api/projects/${jobId}?confirm=true`, { method: 'DELETE' });
-      setVideos((items) => (items || []).filter((item) => item.job_id !== jobId));
-      setProjects((items) => { const next = { ...items }; delete next[jobId]; return next; });
+      await apiJson(`/api/projects/${deleteJobId}?confirm=true`, { method: 'DELETE' });
+      setVideos((items) => (items || []).filter((item) => item.job_id !== deleteJobId));
+      setProjects((items) => { const next = { ...items }; delete next[deleteJobId]; return next; });
+      setDeleteJobId(null);
     } catch (_) {
       setError('Could not delete this project.');
+    } finally {
+      setDeleting(false);
     }
   };
+
+  const deleteTitle = projects[deleteJobId]?.title || videos?.find((item) => item.job_id === deleteJobId)?.title || 'this project';
 
   const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '');
 
@@ -109,7 +118,7 @@ export default function HistoryTab({ onReopenProject }) {
                   </button>
                 )}
                 {project && (
-                  <button onClick={() => handleDelete(jobId)} className="btn-ghost px-3 py-2 text-xs shrink-0 text-danger" title="Delete project">
+                  <button onClick={() => setDeleteJobId(jobId)} className="btn-danger px-3 py-2 text-xs shrink-0" title="Delete project">
                     <Trash2 size={14} /> delete
                   </button>
                 )}
@@ -136,6 +145,13 @@ export default function HistoryTab({ onReopenProject }) {
           );
         })}
       </div>
+      <ConfirmDialog
+        isOpen={Boolean(deleteJobId)}
+        onClose={() => setDeleteJobId(null)}
+        onConfirm={handleDelete}
+        busy={deleting}
+        description={`Delete ${deleteTitle} and all of its local clips? This action cannot be undone.`}
+      />
     </div>
   );
 }

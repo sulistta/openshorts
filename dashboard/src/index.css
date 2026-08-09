@@ -1,15 +1,43 @@
-/* Hallmark · genre: atmospheric · theme: lumen (night foundry) · design-system: design.md · designed-as-app */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@700&display=swap'); /* hook-overlay font burned into videos — not UI */
 @import './tokens.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  :root {
+    font-family: var(--font-body);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+  }
+
   body {
     @apply bg-paper text-ink2 antialiased;
     font-family: var(--font-body);
     font-variant-numeric: tabular-nums;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    -webkit-tap-highlight-color: transparent;
   }
 
   ::selection {
@@ -25,183 +53,270 @@
 }
 
 @layer components {
-  /* hairline card, lit from within — replaces every glass/surface card */
+  .app-shell {
+    min-width: 0;
+    min-height: 0;
+    background: var(--color-paper);
+  }
+
+  .window-titlebar {
+    height: var(--titlebar-height);
+    min-height: var(--titlebar-height);
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--color-rule);
+    background: var(--color-paper-2);
+    user-select: none;
+  }
+
+  .window-drag-region {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    cursor: default;
+  }
+
+  .window-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .window-controls {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding-right: 8px;
+  }
+
+  .window-control {
+    width: 34px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-muted);
+    border-radius: 7px;
+    transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .window-control:hover {
+    color: var(--color-ink);
+    background: var(--color-paper-3);
+  }
+
+  .window-control-danger:hover {
+    color: oklch(97% 0.01 25);
+    background: var(--color-danger);
+  }
+
+  .desktop-rail {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    background: var(--color-paper-2);
+    border-right: 1px solid var(--color-rule);
+  }
+
+  .desktop-main {
+    min-width: 0;
+    min-height: 0;
+    background: var(--color-paper);
+  }
+
+  .workspace-scroll {
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
   .card,
   .glass-panel {
-    background:
-      radial-gradient(120% 90% at 50% 0%, var(--color-paper-emit) 0%, transparent 70%),
-      var(--color-paper-2);
+    background: var(--color-paper-2);
     border: 1px solid var(--color-rule);
     border-radius: var(--radius-card);
+    box-shadow: none;
   }
 
   .card-hover {
-    transition: transform var(--dur-short) var(--ease-out),
-                border-color var(--dur-short) var(--ease-out),
-                background-color var(--dur-short) var(--ease-out);
+    transition: border-color var(--dur-short) var(--ease-out), background-color var(--dur-short) var(--ease-out);
   }
+
   .card-hover:hover {
-    transform: translateY(-4px);
     border-color: var(--color-rule-2);
+    background: var(--color-paper-3);
   }
 
-  /* mono UPPERCASE micro label — the only uppercase surface */
   .eyebrow {
+    color: var(--color-muted);
     font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: var(--tracking-micro);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
     text-transform: uppercase;
-    color: var(--color-ink);
-    opacity: 0.55;
   }
 
-  /* mono value chip for machine data: 00:42 · 9:16 · $0.65 */
   .readout {
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    letter-spacing: var(--tracking-micro);
-    text-transform: uppercase;
     color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   .input-field {
     @apply w-full text-sm text-ink2;
+    min-height: var(--control-height);
     background: var(--color-paper);
     border: 1px solid var(--color-rule-2);
     border-radius: var(--radius-input);
-    padding: 0.75rem 1rem;
+    padding: 0.55rem 0.75rem;
     outline: none;
-    transition: border-color var(--dur-short) var(--ease-out);
+    transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
   }
-  .input-field::placeholder { color: var(--color-muted); opacity: 0.7; }
-  .input-field:focus { border-color: var(--color-accent); }
 
-  .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium lowercase;
-    background: var(--color-accent);
-    color: var(--color-accent-ink);
-    border-radius: 999px;
-    transition: filter var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out);
+  .input-field::placeholder {
+    color: var(--color-faint);
+    opacity: 1;
   }
-  .btn-primary:hover { filter: brightness(1.08); }
-  .btn-primary:active { transform: translateY(1px); }
-  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
 
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium lowercase text-ink;
-    background: transparent;
-    border: 1px solid var(--color-rule-2);
-    border-radius: 999px;
-    transition: border-color var(--dur-short) var(--ease-out), background-color var(--dur-short) var(--ease-out);
+  .input-field:hover {
+    border-color: var(--color-rule-2);
+    background: var(--color-paper-2);
   }
-  .btn-ghost:hover { border-color: var(--color-accent); }
-  .btn-ghost:active { transform: translateY(1px); }
-  .btn-ghost:disabled { opacity: 0.45; cursor: not-allowed; }
 
-  .btn-quiet {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm lowercase text-ink2;
-    background: var(--color-paper-3);
-    border-radius: 999px;
-    transition: filter var(--dur-short) var(--ease-out);
+  .input-field:focus {
+    border-color: var(--color-focus);
+    background: var(--color-paper-2);
   }
-  .btn-quiet:hover { filter: brightness(1.15); }
 
+  .btn-primary,
+  .btn-ghost,
+  .btn-quiet,
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm lowercase;
-    color: var(--color-danger);
-    border: 1px solid color-mix(in oklab, var(--color-danger) 40%, transparent);
-    border-radius: 999px;
-    transition: background-color var(--dur-short) var(--ease-out);
-  }
-  .btn-danger:hover { background: color-mix(in oklab, var(--color-danger) 12%, transparent); }
-
-  .badge-ok, .badge-warn, .badge-danger, .badge-brass, .badge-float {
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    letter-spacing: var(--tracking-micro);
-    text-transform: uppercase;
-    border-radius: 999px;
-    padding: 2px 10px;
+    min-height: var(--control-height);
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-control);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+    transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
   }
-  .badge-ok     { color: var(--color-ok);     background: color-mix(in oklab, var(--color-ok) 12%, transparent); }
-  .badge-warn   { color: var(--color-warn);   background: color-mix(in oklab, var(--color-warn) 12%, transparent); }
+
+  .btn-primary {
+    padding: 0.625rem 0.875rem;
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+  }
+
+  .btn-primary:hover {
+    background: oklch(83% 0.12 78);
+  }
+
+  .btn-primary:active,
+  .btn-ghost:active,
+  .btn-quiet:active,
+  .btn-danger:active {
+    transform: translateY(1px);
+  }
+
+  .btn-primary:disabled,
+  .btn-ghost:disabled,
+  .btn-quiet:disabled,
+  .btn-danger:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  .btn-ghost {
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--color-rule-2);
+    color: var(--color-ink-2);
+    background: transparent;
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--color-accent);
+    background: var(--color-paper-3);
+    color: var(--color-ink);
+  }
+
+  .btn-quiet {
+    padding: 0.5rem 0.75rem;
+    color: var(--color-ink-2);
+    background: var(--color-paper-3);
+  }
+
+  .btn-quiet:hover {
+    background: var(--color-paper-4);
+    color: var(--color-ink);
+  }
+
+  .btn-danger {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid color-mix(in oklab, var(--color-danger) 45%, transparent);
+    color: var(--color-danger);
+    background: transparent;
+  }
+
+  .btn-danger:hover {
+    background: color-mix(in oklab, var(--color-danger) 12%, transparent);
+  }
+
+  .badge-ok,
+  .badge-warn,
+  .badge-danger,
+  .badge-brass,
+  .badge-float {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border-radius: 999px;
+    padding: 0.25rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .badge-ok { color: var(--color-ok); background: color-mix(in oklab, var(--color-ok) 12%, transparent); }
+  .badge-warn { color: var(--color-warn); background: color-mix(in oklab, var(--color-warn) 12%, transparent); }
   .badge-danger { color: var(--color-danger); background: color-mix(in oklab, var(--color-danger) 12%, transparent); }
-  .badge-brass  { color: var(--color-accent); background: color-mix(in oklab, var(--color-accent) 12%, transparent); }
-  /* Floating badge overlapping a card border ("most popular"): needs an OPAQUE
-     base or the border line shows straight through the pill. */
-  .badge-float  {
-    color: var(--color-accent);
-    background: color-mix(in oklab, var(--color-accent) 12%, var(--color-paper));
-  }
-
-  /* narrow phones: tighter pill padding so CTA labels stay on one line */
-  @media (max-width: 379px) {
-    .btn-primary, .btn-ghost { padding-left: 1rem; padding-right: 1rem; }
-  }
+  .badge-brass { color: var(--color-accent); background: color-mix(in oklab, var(--color-accent) 12%, transparent); }
+  .badge-float { color: var(--color-accent); background: var(--color-paper-2); }
 }
 
-/* Custom Scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+.custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-rule-2); border: 2px solid transparent; border-radius: 999px; background-clip: padding-box; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-muted); border: 2px solid transparent; background-clip: padding-box; }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--color-rule-2);
-  border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-rule);
-}
-
-/* Custom Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes scan {
-  0% {
-    top: 0%;
-    opacity: 0;
-  }
-
-  10% {
-    opacity: 1;
-  }
-
-  90% {
-    opacity: 1;
-  }
-
-  100% {
-    top: 100%;
-    opacity: 0;
-  }
+@keyframes pulse {
+  50% { opacity: 0.42; }
 }
 
-@keyframes scan-overlay {
-  0% {
-    top: -20%;
-  }
+.animate-fade { animation: fadeIn var(--dur-panel) var(--ease-out); }
 
-  100% {
-    top: 100%;
+@media (max-width: 900px) {
+  .desktop-rail {
+    width: var(--sidebar-compact-width);
+    min-width: var(--sidebar-compact-width);
   }
-}
-
-@keyframes filament-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.86; }
 }
 
 @media (prefers-reduced-motion: reduce) {

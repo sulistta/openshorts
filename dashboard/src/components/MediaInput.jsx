@@ -7,7 +7,7 @@ const SUPPORTED_PLATFORMS = [
     'Facebook', 'Instagram', 'Dailymotion', 'Reddit', 'Streamable',
 ];
 
-export default function MediaInput({ onProcess, isProcessing }) {
+export default function MediaInput({ onProcess, isProcessing, onOpenLegal }) {
     const [youtubeUrlEnabled, setYoutubeUrlEnabled] = useState(true);
     // File upload is the primary path; the link is secondary.
     const [mode, setMode] = useState('file'); // 'file' | 'url'
@@ -38,21 +38,6 @@ export default function MediaInput({ onProcess, isProcessing }) {
                 }
             })
             .catch(() => {});
-    }, []);
-
-    // A link pasted in the landing hero: preload it here so the user picks up
-    // where they left off. Not auto-submitted — the rights attestation below
-    // has to be ticked by the user.
-    useEffect(() => {
-        let pending = null;
-        try {
-            pending = localStorage.getItem('os_pending_url');
-            if (pending) localStorage.removeItem('os_pending_url');
-        } catch { /* ignore */ }
-        if (pending) {
-            setMode('url');
-            setUrl(pending);
-        }
     }, []);
 
     const handleSubmit = (e) => {
@@ -218,7 +203,7 @@ export default function MediaInput({ onProcess, isProcessing }) {
                         className="mt-0.5 accent-[var(--color-accent)] cursor-pointer"
                     />
                     <span>
-                        I confirm I own this content or have the rights to process it. I am responsible for any content I submit. See our <a href="/#legal" target="_blank" rel="noopener noreferrer" className="text-ink2 underline underline-offset-2 hover:text-brass transition-colors" onClick={(e) => e.stopPropagation()}>Terms & Privacy</a>.
+                        I confirm I own this content or have the rights to process it. I am responsible for any content I submit. See our <button type="button" className="text-ink2 underline underline-offset-2 hover:text-brass transition-colors" onClick={(e) => { e.stopPropagation(); onOpenLegal?.(); }}>Terms & Privacy</button>.
                     </span>
                 </label>
 

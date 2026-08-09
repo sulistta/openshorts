@@ -26,8 +26,8 @@ export default function StepIndicator({ steps, current, onStepClick }) {
               aria-current={active ? 'step' : undefined}
             >
               <span
-                className={`w-6 h-6 rounded-full border flex items-center justify-center font-mono text-[10px] transition-colors duration-200
-                  ${active ? 'border-brass text-brass' : done ? 'border-rule2 text-ok' : 'border-rule text-muted'}`}
+                className={`flex h-7 w-7 items-center justify-center rounded-full border font-mono text-[10px] transition-colors duration-200
+                  ${active ? 'border-brass bg-paper-3 text-brass' : done ? 'border-rule2 text-ok' : 'border-rule text-muted'}`}
               >
                 {done ? <Check size={11} /> : String(i + 1).padStart(2, '0')}
               </span>

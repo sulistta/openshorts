@@ -40,11 +40,13 @@ export default function SegmentedControl({ options, value, onChange, multi = fal
             aria-checked={active}
             disabled={opt.disabled}
             onClick={() => toggle(opt.value)}
-            className={`${pad} rounded-input border text-xs lowercase flex flex-col items-center justify-center gap-1 transition-colors duration-200
+            className={`${pad} rounded-control border text-xs flex flex-col items-center justify-center gap-1 transition-colors duration-200
               ${active
                 ? 'border-brass bg-paper3 text-ink'
                 : 'border-rule bg-paper text-muted hover:text-ink2 hover:border-rule2'}
+              focus-visible:ring-2 focus-visible:ring-brass focus-visible:ring-offset-1 focus-visible:ring-offset-paper
               disabled:opacity-40 disabled:cursor-not-allowed`}
+            aria-label={opt.hint ? `${opt.label}: ${opt.hint}` : opt.label}
           >
             {opt.icon && <span className={active ? 'text-brass' : 'text-muted'}>{opt.icon}</span>}
             <span className="font-medium">{opt.label}</span>

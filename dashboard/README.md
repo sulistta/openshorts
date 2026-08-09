@@ -1,8 +1,13 @@
 # OpenShorts desktop frontend
 
 This directory contains the React/Vite interface and the Tauri v2 desktop
-shell. The Python video pipeline is launched as a local sidecar in packaged
-builds.
+shell. OpenShorts opens directly into a native dark workbench with Clip
+Generator, YouTube Studio, Library, and Settings; it no longer ships a
+marketing Home/Landing route.
+
+The custom titlebar is rendered by React and delegates window actions to the
+Tauri window API. Browser-only Vite development hides those controls.
+The Python video pipeline is launched as a local sidecar in packaged builds.
 
 ## Commands
 
