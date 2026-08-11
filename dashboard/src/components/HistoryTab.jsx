@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Loader2, Download, Film, FolderOpen, Trash2 } from 'lucide-react';
 import { apiJson } from '../lib/api';
 import { getApiUrl } from '../config';
+import { downloadUrl } from '../lib/download';
 import ConfirmDialog from './ui/ConfirmDialog';
 
 // Durable local library. Projects remain until the user deletes them.
@@ -13,6 +14,7 @@ export default function HistoryTab({ onReopenProject }) {
   const [error, setError] = useState('');
   const [deleteJobId, setDeleteJobId] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [downloadingId, setDownloadingId] = useState(null);
 
   useEffect(() => {
     apiJson('/api/history')
@@ -62,6 +64,21 @@ export default function HistoryTab({ onReopenProject }) {
       setError('Could not delete this project.');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleDownload = async (video) => {
+    if (downloadingId) return;
+    setDownloadingId(video.id);
+    try {
+      await downloadUrl(getApiUrl(video.download_url), {
+        filename: `openshorts_${(video.job_id || '').slice(0, 8)}_clip_${video.clip_index + 1}.mp4`,
+        filters: [{ name: 'MP4 video', extensions: ['mp4'] }],
+      });
+    } catch (_) {
+      setError('Could not save this video.');
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -133,9 +150,16 @@ export default function HistoryTab({ onReopenProject }) {
                       <p className="text-sm text-ink font-medium line-clamp-2 mb-1" title={v.title}>{v.title || 'Short'}</p>
                       <div className="flex items-center justify-between">
                         <span className="readout">{fmtDate(v.created_at)}</span>
-                        <a href={getApiUrl(v.download_url)} className="text-micro font-mono uppercase text-brass hover:text-ink flex items-center gap-1 transition-colors" title="Download">
-                          <Download size={14} /> Download
-                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(v)}
+                          disabled={downloadingId === v.id}
+                          className="text-micro font-mono uppercase text-brass hover:text-ink flex items-center gap-1 transition-colors disabled:opacity-45"
+                          title="Download"
+                        >
+                          {downloadingId === v.id ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                          {downloadingId === v.id ? 'Saving' : 'Download'}
+                        </button>
                       </div>
                     </div>
                   </div>

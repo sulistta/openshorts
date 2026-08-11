@@ -14,6 +14,7 @@ import LegalSheet from './components/LegalSheet';
 import { apiFetch, apiJson } from './lib/api';
 import { getApiUrl } from './config';
 import { openExternal } from './lib/openExternal';
+import { saveBlob } from './lib/download';
 
 // Legacy-compatible local key encoding. This is not a security boundary.
 const SECRET_KEY = import.meta.env.VITE_ENCRYPTION_KEY || "OpenShorts-Static-Salt-Change-Me";
@@ -217,14 +218,10 @@ function App() {
       const res = await apiFetch(`/api/jobs/${jobId}/download-all`);
       if (!res.ok) throw new Error(await res.text());
       const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `openshorts_clips_${(jobId || '').slice(0, 8)}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      await saveBlob(blob, {
+        filename: `openshorts_clips_${(jobId || '').slice(0, 8)}.zip`,
+        filters: [{ name: 'ZIP archive', extensions: ['zip'] }],
+      });
     } catch (e) {
       alert(`Download failed: ${e.message}`);
     } finally {

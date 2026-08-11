@@ -1,5 +1,6 @@
 import { renderMediaOnWeb } from '@remotion/web-renderer';
 import { ShortVideo } from '../remotion/compositions/ShortVideo';
+import { downloadUrl } from './download';
 
 /**
  * Renders a Remotion composition directly in the browser using WebCodecs.
@@ -62,13 +63,11 @@ export async function renderInBrowser({
 }
 
 /**
- * Triggers a download of a blob URL as an MP4 file.
+ * Saves a blob URL as an MP4 file. In Tauri this uses the native save dialog.
  */
-export function downloadBlobUrl(blobUrl, filename = 'output.mp4') {
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+export async function downloadBlobUrl(blobUrl, filename = 'output.mp4') {
+    return downloadUrl(blobUrl, {
+        filename,
+        filters: [{ name: 'MP4 video', extensions: ['mp4'] }],
+    });
 }

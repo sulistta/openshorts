@@ -57,12 +57,16 @@ fn stop_backend(_app: &AppHandle) {}
 fn main() {
     let api_url = format!("http://127.0.0.1:{DESKTOP_API_PORT}");
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
         .setup(move |app| {
             app.manage(BackendUrl(api_url.clone()));
             #[cfg(not(debug_assertions))]
-            app.manage(BackendChild(Mutex::new(Some(spawn_backend(&app.handle())?))));
+            app.manage(BackendChild(Mutex::new(Some(spawn_backend(
+                &app.handle(),
+            )?))));
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![backend_url])

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Download, AlertCircle, Loader2, Copy, Check, Wand2, Type, Languages, FileText } from 'lucide-react';
 import { getApiUrl } from '../config';
-import { openExternal } from '../lib/openExternal';
 import { apiFetch } from '../lib/api';
+import { downloadUrl } from '../lib/download';
 import SubtitleModal from './SubtitleModal';
 import HookModal from './HookModal';
 import TranslateModal from './TranslateModal';
@@ -32,24 +32,21 @@ export default function ResultCard({ clip, index, jobId, durableUrl, geminiApiKe
     };
     const originalVideoUrl = getApiUrl((clip.video_url || '').replace(/[^/]+$/, stripBurns((clip.video_url || '').split('/').pop())));
     const [currentVideoUrl, setCurrentVideoUrl] = useState(getApiUrl(clip.video_url));
+    const [isDownloading, setIsDownloading] = useState(false);
 
     const downloadClip = async () => {
+        if (isDownloading) return;
+        setIsDownloading(true);
         try {
-            const response = await fetch(currentVideoUrl);
-            if (!response.ok) throw new Error('Download failed');
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = `clip-${index + 1}.mp4`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+            await downloadUrl(currentVideoUrl, {
+                filename: `openshorts_clip_${index + 1}.mp4`,
+                filters: [{ name: 'MP4 video', extensions: ['mp4'] }],
+            });
         } catch (err) {
             console.error('Download error:', err);
-            void openExternal(currentVideoUrl);
+            alert(`Could not save this clip: ${err.message}`);
+        } finally {
+            setIsDownloading(false);
         }
     };
     // Latest file that exists ON THE SERVER (blob: previews don't count).
@@ -617,9 +614,13 @@ export default function ResultCard({ clip, index, jobId, durableUrl, geminiApiKe
                             e.preventDefault();
                             downloadClip();
                         }}
+                        disabled={isDownloading}
                         className={QUIET_BTN}
                     >
-                        <Download size={16} className="text-muted group-hover:text-brass transition-colors shrink-0" /> download
+                        {isDownloading
+                            ? <Loader2 size={16} className="animate-spin text-brass shrink-0" />
+                            : <Download size={16} className="text-muted group-hover:text-brass transition-colors shrink-0" />}
+                        {isDownloading ? 'saving…' : 'download'}
                     </button>
                 </div>
             </div>

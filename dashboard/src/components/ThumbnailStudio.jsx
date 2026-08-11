@@ -1,8 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
 import { Upload, Image, Loader2, Send, Check, Download, ArrowRight, ArrowLeft, Sparkles, Video, Type, X, Plus, MessageSquare, FileText, AlertCircle } from 'lucide-react';
 import { getApiUrl } from '../config';
-import { openExternal } from '../lib/openExternal';
 import { apiFetch } from '../lib/api';
+import { downloadUrl } from '../lib/download';
 import StepIndicator from './ui/StepIndicator';
 import SegmentedControl from './ui/SegmentedControl';
 
@@ -296,19 +296,12 @@ export default function ThumbnailStudio({ geminiApiKey }) {
 
   const handleDownload = async (url) => {
     try {
-      const response = await fetch(getApiUrl(url));
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = url.split('/').pop() || 'thumbnail.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
-    } catch {
-      // Fallback: open in new tab if fetch fails
-      await openExternal(getApiUrl(url));
+      await downloadUrl(getApiUrl(url), {
+        filename: url.split('/').pop() || 'thumbnail.png',
+        filters: [{ name: 'PNG image', extensions: ['png'] }],
+      });
+    } catch (e) {
+      alert(`Could not save this thumbnail: ${e.message}`);
     }
   };
 
