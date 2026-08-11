@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mutonby/openshorts",
-  "description": "Local OpenShorts desktop MCP server for clipping, editing and publishing videos.",
+  "description": "Local OpenShorts desktop MCP server for clipping and editing videos.",
   "version": "1.0.0",
   "repository": {
     "url": "https://github.com/mutonby/openshorts",
@@ -17,20 +17,6 @@
           "description": "Optional Gemini BYOK key for this request.",
           "isRequired": false,
           "isSecret": true,
-          "format": "string"
-        },
-        {
-          "name": "X-Upload-Post-Key",
-          "description": "Optional Upload-Post BYOK key for publishing.",
-          "isRequired": false,
-          "isSecret": true,
-          "format": "string"
-        },
-        {
-          "name": "X-Upload-Post-User",
-          "description": "Optional Upload-Post profile for publishing.",
-          "isRequired": false,
-          "isSecret": false,
           "format": "string"
         }
       ]

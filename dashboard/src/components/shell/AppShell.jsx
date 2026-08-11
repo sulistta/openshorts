@@ -23,7 +23,7 @@ import {
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Clip Generator', icon: LayoutDashboard, hint: 'Create and edit clips' },
-  { id: 'thumbnails', label: 'YouTube Studio', icon: Image, hint: 'Titles and thumbnails' },
+  { id: 'thumbnails', label: 'Thumbnail Studio', icon: Image, hint: 'Titles and thumbnails' },
   { id: 'history', label: 'Library', icon: History, hint: 'Local projects' },
   { id: 'settings', label: 'Settings', icon: Settings, hint: 'Providers and privacy' },
 ];
@@ -67,9 +67,6 @@ export default function AppShell({
   setActiveTab,
   status,
   keysMissing,
-  userProfiles,
-  selectedUserId,
-  onSelectUser,
   onNewProject,
   onOpenLegal,
   children,
@@ -164,11 +161,6 @@ export default function AppShell({
             </div>
 
             <div className="flex items-center gap-2">
-              {userProfiles?.length > 0 && (
-                <select value={selectedUserId} onChange={(event) => onSelectUser(event.target.value)} className="hidden max-w-[180px] rounded-control border border-rule-2 bg-paper-2 px-2 py-2 text-xs text-ink-2 outline-none focus:border-brass sm:block" aria-label="Publishing profile">
-                  {userProfiles.map((profile) => <option key={profile.username} value={profile.username}>{profile.username}</option>)}
-                </select>
-              )}
               {keysMissing && (
                 <button type="button" onClick={() => setActiveTab('settings')} className="badge-warn" title="Configure your Gemini API key">
                   <span className="hidden sm:inline">Gemini key missing</span>

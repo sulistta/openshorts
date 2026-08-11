@@ -1,9 +1,8 @@
 # OpenShorts
 
 OpenShorts is a local desktop application that turns long videos into vertical
-clips, adds subtitles and effects, and can publish through provider APIs that
-you bring yourself. It uses Tauri v2 for the native shell and runs the Python
-video pipeline as a loopback-only sidecar.
+clips and adds subtitles and effects. It uses Tauri v2 for the native shell and
+runs the Python video pipeline as a loopback-only sidecar.
 
 The project has no hosted account, subscription, quota, billing, or remote
 project storage. In packaged builds, projects live in the operating system's
@@ -54,16 +53,15 @@ The optional provider environment variables are:
 
 | Variable | Used for |
 | --- | --- |
-| `GEMINI_API_KEY` | AI analysis, titles, effects and YouTube Studio |
-| `UPLOAD_POST_API_KEY` | Optional social publishing |
-| `UPLOAD_POST_USER_ID` | Optional Upload-Post profile for API/CLI publishing |
+| `GEMINI_API_KEY` | AI analysis, titles, effects and thumbnail studio |
 | `YOUTUBE_COOKIES` | Optional YouTube URL ingestion |
 | `WHISPER_MODEL`, `WHISPER_DEVICE`, `WHISPER_COMPUTE` | Local transcription tuning |
+| `AUTO_CAPTIONS` | Set to `1` to burn subtitles automatically on new clips (off by default) |
 | `OUTPUT_MAX_GB`, `UPLOADS_MAX_GB` | Local disk caps for transient work |
 
-For browser-supplied BYOK, configure keys in Settings. Requests can also send
-`X-Gemini-Key` and `X-Upload-Post-Key`; keys are not stored in the project
-library.
+For browser-supplied BYOK, configure the Gemini key in Settings or send it as
+`X-Gemini-Key`; keys are not stored in the project library. OpenShorts creates,
+edits, and downloads clips locally; it does not publish to social networks.
 
 ## Local API, MCP and CLI
 

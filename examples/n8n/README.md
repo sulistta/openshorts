@@ -32,7 +32,7 @@ Failed jobs fire the same webhook with `"event": "job.failed"` and an
 `error` field. URLs point at the local OpenShorts app and do not expire unless
 you delete the project.
 
-## Publishing
+## Next steps
 
-After **One item per clip**, chain notifications or post via
-`POST /api/social/post` using the app's Upload-Post BYOK key.
+After **One item per clip**, chain notifications, save the local download links,
+or send the finished files to your own workflow.

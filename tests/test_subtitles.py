@@ -1,4 +1,8 @@
 """Tests for subtitle word merging, SRT generation and style sanitizing."""
+import ast
+import os
+from pathlib import Path
+
 from subtitles import (
     merge_continuation_words,
     generate_srt,
@@ -245,7 +249,26 @@ class TestBurnFilterFonts:
 
 
 class TestAutoCaptionDefaults:
-    """The caption look every clip now ships with (chosen 25-jul-2026)."""
+    """The optional automatic-caption look and its opt-in setting."""
+
+    @staticmethod
+    def _main_function(name):
+        """Load one lightweight function from main.py without its ML imports."""
+        tree = ast.parse(Path("main.py").read_text(encoding="utf-8"))
+        function = next(
+            node for node in tree.body
+            if isinstance(node, ast.FunctionDef) and node.name == name
+        )
+        scope = {"os": os}
+        exec(compile(ast.Module(body=[function], type_ignores=[]), "main.py", "exec"), scope)
+        return scope[name]
+
+    def test_auto_captions_are_disabled_by_default(self, monkeypatch):
+        enabled = self._main_function("_auto_captions_enabled")
+        monkeypatch.delenv("AUTO_CAPTIONS", raising=False)
+        assert enabled() is False
+        monkeypatch.setenv("AUTO_CAPTIONS", "1")
+        assert enabled() is True
 
     def test_style_is_complete(self):
         from subtitles import AUTO_CAPTION_STYLE, generate_ass

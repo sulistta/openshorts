@@ -11,7 +11,6 @@ export OPENSHORTS_API_URL=http://127.0.0.1:37831
 
 openshorts process "https://youtube.com/watch?v=..." --wait
 openshorts clips <job_id>
-openshorts publish <job_id> 0 --platforms tiktok,youtube
 ```
 
 For pipelines, pass `--webhook` and `--webhook-secret`. The API sends one

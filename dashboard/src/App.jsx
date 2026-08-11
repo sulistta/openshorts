@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Share2, ChevronDown, Check, Activity, X, Terminal, Shield, Globe, RotateCcw, Calendar, AlertTriangle, KeyRound, Loader2, Download } from 'lucide-react';
+import { ChevronDown, Check, Activity, X, Terminal, Shield, Globe, RotateCcw, AlertTriangle, KeyRound, Loader2, Download } from 'lucide-react';
 import KeyInput from './components/KeyInput';
 import MediaInput from './components/MediaInput';
 import ResultCard from './components/ResultCard';
 import ProcessingAnimation from './components/ProcessingAnimation';
 import ThumbnailStudio from './components/ThumbnailStudio';
-import ScheduleWeekModal from './components/ScheduleWeekModal';
 import HistoryTab from './components/HistoryTab';
 import Modal from './components/ui/Modal';
 import AppShell from './components/shell/AppShell';
@@ -57,7 +56,6 @@ const decrypt = (text) => {
 
 const SESSION_KEY = 'openshorts_session';
 const SESSION_MAX_AGE = 3600000; // 1 hour (matches server job retention)
-
 // Mock polling function
 const pollJob = async (jobId) => {
   const res = await apiFetch(`/api/status/${jobId}`);
@@ -70,12 +68,6 @@ function App() {
   const [durableClips, setDurableClips] = useState({});
 
   const [apiKey, setApiKey] = useState(localStorage.getItem('gemini_key') || '');
-  // Social API State - Load encrypted or plain
-  const [uploadPostKey, setUploadPostKey] = useState(() => {
-    const stored = localStorage.getItem('uploadPostKey_v3');
-    if (stored) return decrypt(stored);
-    return '';
-  });
   // ElevenLabs API State - Load encrypted
   const [elevenLabsKey, setElevenLabsKey] = useState(() => {
     const stored = localStorage.getItem('elevenLabsKey_v1');
@@ -83,8 +75,6 @@ function App() {
     return '';
   });
 
-  const [uploadUserId, setUploadUserId] = useState(() => localStorage.getItem('uploadUserId') || '');
-  const [userProfiles, setUserProfiles] = useState([]); // List of {username, connected: []}
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [jobId, setJobId] = useState(null);
   const [status, setStatus] = useState('idle'); // idle, processing, complete, error
@@ -107,7 +97,6 @@ function App() {
   const [noSource, setNoSource] = useState(false);
 
   const [sessionRecovered, setSessionRecovered] = useState(false);
-  const [showScheduleWeek, setShowScheduleWeek] = useState(false);
   const [showLegal, setShowLegal] = useState(false);
 
   // Silent-success "saved" states for the settings key inputs (design.md: no alert popups)
@@ -305,32 +294,20 @@ function App() {
   }, [jobId, status, results, activeTab, noSource, projectState]);
 
   useEffect(() => {
-    // Encrypt Gemini Key too for consistency if desired, but user asked specifically about Social integration not saving well.
-    // For now keeping gemini plain for compatibility unless requested.
     if (apiKey) localStorage.setItem('gemini_key', apiKey);
   }, [apiKey]);
 
   useEffect(() => {
-    if (uploadPostKey) {
-      localStorage.setItem('uploadPostKey_v3', encrypt(uploadPostKey));
-    }
-    if (uploadUserId) {
-      localStorage.setItem('uploadUserId', uploadUserId);
-    }
-  }, [uploadPostKey, uploadUserId]);
+    localStorage.removeItem('postizApiKey_v1');
+    localStorage.removeItem('postizBaseUrl_v1');
+    localStorage.removeItem('postizIntegrationIds_v1');
+  }, []);
 
   useEffect(() => {
     if (elevenLabsKey) {
       localStorage.setItem('elevenLabsKey_v1', encrypt(elevenLabsKey));
     }
   }, [elevenLabsKey]);
-
-  useEffect(() => {
-    if (uploadPostKey && userProfiles.length === 0) {
-      fetchUserProfiles({ silent: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uploadPostKey]);
 
   // Fetch durable local-library URLs for the current job.
   useEffect(() => {
@@ -381,31 +358,6 @@ function App() {
     }
     return () => clearInterval(interval);
   }, [status, jobId]);
-
-
-  // Fetch Upload-Post profiles using the caller's local key.
-  const fetchUserProfiles = async ({ silent = false } = {}) => {
-    if (!uploadPostKey) return;
-    try {
-      const res = await apiFetch('/api/social/user', {
-        headers: uploadPostKey ? { 'X-Upload-Post-Key': uploadPostKey } : {}
-      });
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      if (data.profiles && data.profiles.length > 0) {
-        setUserProfiles(data.profiles);
-        // Auto select first if none selected
-        if (!uploadUserId) {
-          setUploadUserId(data.profiles[0].username);
-        }
-      } else if (!silent) {
-        alert("No profiles found for this API Key.");
-      }
-    } catch (e) {
-      if (!silent) alert("Error fetching User Profiles. Please check key.");
-      console.error(e);
-    }
-  };
 
   const keysMissing = !apiKey;
 
@@ -482,9 +434,6 @@ function App() {
       setActiveTab={setActiveTab}
       status={status}
       keysMissing={keysMissing}
-      userProfiles={userProfiles}
-      selectedUserId={uploadUserId}
-      onSelectUser={setUploadUserId}
       onNewProject={handleReset}
       onOpenLegal={() => setShowLegal(true)}
     >
@@ -518,25 +467,6 @@ function App() {
 
           <div className="space-y-4">
             <KeyInput onKeySet={setApiKey} savedKey={apiKey} />
-
-            <section className="card p-5 sm:p-6">
-              <div className="mb-5 flex items-start justify-between gap-4">
-                <div>
-                  <p className="eyebrow mb-2">Publishing</p>
-                  <h2 className="text-base font-semibold text-ink">Upload-Post</h2>
-                  <p className="mt-1 text-sm leading-relaxed text-muted">Connect social profiles for publishing clips to TikTok, Instagram, and YouTube.</p>
-                </div>
-                <Share2 size={18} className="text-brass" />
-              </div>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <input type="password" value={uploadPostKey} onChange={(e) => setUploadPostKey(e.target.value)} className="input-field" placeholder="Upload-Post API key" />
-                <button type="button" onClick={fetchUserProfiles} className="btn-quiet shrink-0">Connect</button>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted">
-                <button type="button" onClick={() => openExternal('https://app.upload-post.com/login')} className="btn-ghost text-xs">Create account</button>
-                <button type="button" onClick={() => openExternal('https://app.upload-post.com/api-keys')} className="btn-ghost text-xs">Get API key</button>
-              </div>
-            </section>
 
             <section className="card p-5 sm:p-6">
               <div className="mb-5 flex items-start justify-between gap-4">
@@ -578,7 +508,7 @@ function App() {
       )}
 
       {activeTab === 'thumbnails' && (
-        <ClipWorkspace state="studio"><ThumbnailStudio geminiApiKey={apiKey} uploadPostKey={uploadPostKey} uploadUserId={uploadUserId} /></ClipWorkspace>
+        <ClipWorkspace state="studio"><ThumbnailStudio geminiApiKey={apiKey} /></ClipWorkspace>
       )}
 
       {activeTab === 'dashboard' && status === 'idle' && (
@@ -616,10 +546,10 @@ function App() {
                 <h2 className="text-base font-semibold text-ink">Generated clips</h2>
                 {results?.clips?.length > 0 && <span className="readout rounded-full bg-paper-3 px-2.5 py-1">{results.clips.length} clips</span>}
                 {results?.cost_analysis && <span className="readout rounded-full bg-paper-3 px-2.5 py-1">Gemini · ${results.cost_analysis.total_cost.toFixed(5)}</span>}
-                {results?.clips?.length > 0 && status === 'complete' && <div className="ml-auto flex gap-2"><button type="button" onClick={handleDownloadAll} disabled={downloadingAll} className="btn-ghost text-xs">{downloadingAll ? 'Zipping…' : <><Download size={14} /> Download all</>}</button>{results.clips.length > 1 && <button type="button" onClick={() => setShowScheduleWeek(true)} className="btn-primary text-xs"><Calendar size={14} /> Schedule week</button>}</div>}
+                {results?.clips?.length > 0 && status === 'complete' && <div className="ml-auto flex gap-2"><button type="button" onClick={handleDownloadAll} disabled={downloadingAll} className="btn-ghost text-xs">{downloadingAll ? 'Zipping…' : <><Download size={14} /> Download all</>}</button></div>}
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto p-1 custom-scrollbar">
-                {results?.clips?.length > 0 ? <div className={`grid gap-4 pb-6 ${status === 'complete' ? 'xl:grid-cols-2' : 'grid-cols-1'}`}>{results.clips.map((clip, i) => <ResultCard key={`${jobId}-${i}`} clip={clip} index={i} jobId={jobId} initialState={projectState?.clips?.find((c) => c.index === i) || null} onStateChange={handleClipStateChange} durableUrl={durableClips[i]} uploadPostKey={uploadPostKey} uploadUserId={uploadUserId} geminiApiKey={apiKey} elevenLabsKey={elevenLabsKey} connectedPlatforms={(userProfiles.find((p) => p.username === uploadUserId) || userProfiles[0])?.connected ?? null} onPlay={handleClipPlay} onPause={handleClipPause} onBulkSubtitle={handleBulkSubtitles} clipCount={results.clips.length} bulkProgress={bulkSub} />)}</div> : <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-3 text-muted">{status === 'processing' ? <Loader2 size={28} className="animate-spin text-brass" /> : <AlertTriangle size={24} className="text-danger" />}<p className="text-sm">{status === 'processing' ? 'Waiting for clips…' : 'Generation failed.'}</p></div>}
+                {results?.clips?.length > 0 ? <div className={`grid gap-4 pb-6 ${status === 'complete' ? 'xl:grid-cols-2' : 'grid-cols-1'}`}>{results.clips.map((clip, i) => <ResultCard key={`${jobId}-${i}`} clip={clip} index={i} jobId={jobId} initialState={projectState?.clips?.find((c) => c.index === i) || null} onStateChange={handleClipStateChange} durableUrl={durableClips[i]} geminiApiKey={apiKey} elevenLabsKey={elevenLabsKey} onPlay={handleClipPlay} onPause={handleClipPause} onBulkSubtitle={handleBulkSubtitles} clipCount={results.clips.length} bulkProgress={bulkSub} />)}</div> : <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-3 text-muted">{status === 'processing' ? <Loader2 size={28} className="animate-spin text-brass" /> : <AlertTriangle size={24} className="text-danger" />}<p className="text-sm">{status === 'processing' ? 'Waiting for clips…' : 'Generation failed.'}</p></div>}
               </div>
             </div>
           </div>
@@ -627,10 +557,8 @@ function App() {
       )}
 
       <Modal isOpen={showKeyModal} onClose={() => setShowKeyModal(false)} eyebrow="Setup" title="Gemini API key required" footer={<div className="flex gap-2"><button type="button" onClick={() => setShowKeyModal(false)} className="btn-ghost flex-1">Cancel</button><button type="button" onClick={() => { setShowKeyModal(false); setActiveTab('settings'); }} className="btn-primary flex-1">Open Settings</button></div>}>
-        <p className="text-sm leading-relaxed text-ink-2">OpenShorts needs a Gemini key for AI processing. Add it in Settings; optional provider keys can be configured there when needed.</p>
+        <p className="text-sm leading-relaxed text-ink-2">OpenShorts needs a Gemini key for AI processing. Add it in Settings to continue.</p>
       </Modal>
-
-      <ScheduleWeekModal isOpen={showScheduleWeek} onClose={() => setShowScheduleWeek(false)} clips={results?.clips || []} jobId={jobId} uploadPostKey={uploadPostKey} uploadUserId={uploadUserId} />
 
       {qualityGate && <Modal isOpen onClose={() => setQualityGate(null)} size="md" eyebrow="Source quality" title="Process lower-quality video?"><div className="space-y-4"><p className="text-sm leading-relaxed text-ink-2">YouTube offers <strong className="text-brass">{qualityGate.info.max_height}p</strong> for this source, below the recommended {qualityGate.info.min_height}p.</p>{qualityGate.info.cookies_invalid && <p className="text-xs leading-relaxed text-muted">Your YouTube cookies may be expired. Refreshing them can unlock HD.</p>}<div className="flex justify-end gap-2"><button type="button" onClick={() => setQualityGate(null)} className="btn-ghost">Cancel</button><button type="button" onClick={() => { const d = qualityGate.data; setQualityGate(null); handleProcess(d, true); }} className="btn-primary">Process anyway</button></div></div></Modal>}
       <LegalSheet isOpen={showLegal} onClose={() => setShowLegal(false)} />

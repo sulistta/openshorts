@@ -35,7 +35,7 @@ export default function LegalSheet({ isOpen, onClose }) {
           </ul>
         </Section>
         <Section title="Third-party providers">
-          <p>When enabled, Gemini, ElevenLabs, Upload-Post, YouTube, and other integrations receive the data required for the requested operation. Their terms and privacy policies apply.</p>
+          <p>When enabled, Gemini and ElevenLabs receive the data required for the requested operation. Their terms and privacy policies apply.</p>
         </Section>
         <Section title="Contact and changes">
           <p>For project issues and questions, use GitHub Issues.</p>

@@ -147,24 +147,6 @@ def cmd_clips(args):
     _print_clips(payload.get("result"))
 
 
-def cmd_publish(args):
-    body = {
-        "job_id": args.job_id,
-        "clip_index": args.clip_index,
-        "platforms": [p.strip() for p in args.platforms.split(",") if p.strip()],
-    }
-    if args.title:
-        body["title"] = args.title
-    if args.schedule:
-        body["scheduled_date"] = args.schedule
-    if args.timezone:
-        body["timezone"] = args.timezone
-    status, payload = _request("POST", "/api/social/post", body)
-    if status >= 400:
-        _die(status, payload)
-    print(json.dumps(payload) if args.json else f"publishing: {payload}")
-
-
 def main(argv=None):
     parser = argparse.ArgumentParser(
         prog="openshorts",
@@ -190,15 +172,6 @@ def main(argv=None):
     p = sub.add_parser("clips", help="list finished clips with links")
     p.add_argument("job_id")
     p.set_defaults(func=cmd_clips)
-
-    p = sub.add_parser("publish", help="post or schedule one clip to social platforms")
-    p.add_argument("job_id")
-    p.add_argument("clip_index", type=int)
-    p.add_argument("--platforms", required=True, help="comma list: tiktok,instagram,youtube")
-    p.add_argument("--title")
-    p.add_argument("--schedule", help="ISO datetime for scheduled posting")
-    p.add_argument("--timezone", help="IANA timezone for --schedule")
-    p.set_defaults(func=cmd_publish)
 
     args = parser.parse_args(argv)
     args.func(args)

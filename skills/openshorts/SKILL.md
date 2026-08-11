@@ -1,7 +1,7 @@
 ---
 name: openshorts
 version: 1.0.0
-description: Use the local OpenShorts desktop app to turn long videos into vertical clips, edit captions, and optionally publish them.
+description: Use the local OpenShorts desktop app to turn long videos into vertical clips and edit captions.
 homepage: https://github.com/mutonby/openshorts
 metadata:
   openclaw:
@@ -9,10 +9,10 @@ metadata:
     primaryEnv: OPENSHORTS_API_URL
   hermes:
     category: media
-    tags: [video, clips, shorts, social-media, publishing, automation]
+    tags: [video, clips, shorts, captions, automation]
 ---
 
-# OpenShorts: clip and publish video
+# OpenShorts: clip and edit video
 
 OpenShorts turns a long video into vertical clips with word-level subtitles.
 Jobs are asynchronous: submit, then use a webhook or poll until completion.
@@ -24,8 +24,6 @@ Point MCP or REST at the running desktop app. The default is
 Provider BYOK headers are optional:
 
 - `X-Gemini-Key` for AI analysis and editing
-- `X-Upload-Post-Key` for social publishing
-- `X-Upload-Post-User` for the Upload-Post profile used to publish
 
 ## Core loop
 
@@ -33,11 +31,11 @@ Provider BYOK headers are optional:
 2. Poll `GET /api/status/{job_id}` every few seconds, or provide
    `webhook_url` and `webhook_secret` for an HMAC-signed callback.
 3. Read `result.clips` and use their local `video_url` or download endpoint.
-4. Optionally restyle captions with `POST /api/subtitle`, then publish with
-   `POST /api/social/post`.
+4. Optionally restyle captions with `POST /api/subtitle`, then download the
+   finished clips locally.
 
-The MCP server exposes `process_video`, `get_job_status`, `list_clips`,
-`add_subtitles`, and `publish_clip`.
+The MCP server exposes `process_video`, `get_job_status`, `list_clips`, and
+`add_subtitles`.
 
 ## Rules
 
@@ -52,5 +50,4 @@ The MCP server exposes `process_video`, `get_job_status`, `list_clips`,
 export OPENSHORTS_API_URL=http://127.0.0.1:37831
 uvx openshorts process <url> --wait
 openshorts clips <job_id>
-openshorts publish <job_id> 0 --platforms tiktok
 ```

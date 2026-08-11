@@ -6,10 +6,10 @@ OpenShorts is a local desktop video workspace. The interface is a focused workbe
 
 The single Tauri window opens directly to the workspace. Primary areas are:
 
-- **Clip Generator** — choose a local file or video URL, process it, review generated clips, and edit/publish them.
-- **YouTube Studio** — move through the existing title, thumbnail, description, and publish workflow.
+- **Clip Generator** — choose a local file or video URL, process it, review generated clips, edit, and download them.
+- **Thumbnail Studio** — create titles, thumbnails, and descriptions for local use.
 - **Library** — reopen durable local projects, preview clips, download, and explicitly delete.
-- **Settings** — manage BYOK providers, publishing profiles, privacy, storage, and legal text.
+- **Settings** — manage BYOK providers, privacy, storage, and legal text.
 
 There is no Home/Landing page, SEO route, marketing hero, feature grid, FAQ route, or hash-based navigation.
 
@@ -56,8 +56,8 @@ Do not change these as part of a visual redesign:
 
 - Tauri → local backend URL bootstrap and `127.0.0.1` loopback binding.
 - `getApiUrl`, `apiFetch`, and `apiJson` behavior.
-- Existing API paths and BYOK request headers.
-- `gemini_key`, `uploadPostKey_v3`, `elevenLabsKey_v1`, `uploadUserId`, and `openshorts_session` storage formats.
+- Existing API paths and BYOK request headers, except when a provider migration explicitly changes them.
+- `gemini_key`, `elevenLabsKey_v1`, and `openshorts_session` storage formats.
 - Durable project manifests, restore, local library URLs, and explicit deletion.
 - Remotion browser rendering and the server edit chain.
 

@@ -11,10 +11,11 @@ import time
 import zipfile
 import itertools
 import asyncio
+import httpx
 from dotenv import load_dotenv
 from typing import Dict, Optional, List
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Header, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
@@ -52,15 +53,6 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 MAX_CONCURRENT_JOBS = int(os.environ.get("MAX_CONCURRENT_JOBS", "5"))
 MAX_FILE_SIZE_MB = 2048  # 2GB limit
 
-# How TikTok receives our uploads. MEDIA_UPLOAD lands the video in the user's
-# TikTok drafts so they finish the post inside TikTok's own editor; DIRECT_POST
-# publishes straight to their feed, which is Upload-Post's default.
-#
-# Drafts are the safer default for an automated pipeline: nothing reaches an
-# audience without the account owner seeing it first, and TikTok's own editor is
-# where covers, sounds and hashtags actually get chosen. The UI must say so —
-# a user who expects a published post and finds a draft will read it as a bug.
-TIKTOK_POST_MODE = os.environ.get("TIKTOK_POST_MODE", "MEDIA_UPLOAD").strip()
 JOB_RETENTION_SECONDS = int(os.environ.get("JOB_RETENTION_SECONDS", "3600"))  # job/file retention (issue #46)
 # Ceiling for the working directory once it lives on a persistent volume: the
 # age-based sweep alone can't stop a burst of long videos from filling the disk.
@@ -93,26 +85,15 @@ async def resolve_gemini(request: Request) -> Optional[str]:
     return header or os.environ.get("GEMINI_API_KEY")
 
 
-async def resolve_upload_post(request: Request, body_key: Optional[str] = None):
-    """Resolve Upload-Post credentials using local BYOK precedence."""
-    header = request.headers.get("X-Upload-Post-Key")
-    key = header or body_key or os.environ.get("UPLOAD_POST_API_KEY")
-    profile = (request.headers.get("X-Upload-Post-User")
-               or os.environ.get("UPLOAD_POST_USER_ID"))
-    return key, profile
-
-
 def gemini_missing_error():
     return HTTPException(status_code=400, detail="Missing X-Gemini-Key header")
 
 
-# Application state is single-tenant and FIFO. Every caller supplies its own
-# provider keys when an integration needs them.
+# Application state is single-tenant and FIFO.
 job_queue = asyncio.Queue()
 _job_seq = itertools.count()
 jobs: Dict[str, Dict] = {}
 thumbnail_sessions: Dict[str, Dict] = {}
-publish_jobs: Dict[str, Dict] = {}
 concurrency_semaphore = asyncio.Semaphore(MAX_CONCURRENT_JOBS)
 
 
@@ -164,7 +145,7 @@ def _canonical_clip_file(output_dir, base_name, index):
     """The file to serve for clip ``index``, preferring a derived version.
 
     The pipeline writes the clean reframe as ``<base>_clip_<n>.mp4`` and any
-    post-processing (auto-captions, and /api/subtitle re-styles) as
+    post-processing (optional auto-captions, and /api/subtitle re-styles) as
     ``subtitled_<ts>_<clean>.mp4``, keeping the original for re-styling. Every
     place that rebuilds the canonical name from disk — restore after a restart,
     the local library and the download bundle — must therefore resolve to the
@@ -196,7 +177,7 @@ def _strip_burned_captions(output_dir, filename):
 
 
 def _reapply_captions(job_id, clip_index, video_path):
-    """Re-burn the default captions onto a freshly derived file.
+    """Re-burn an existing caption layer onto a freshly derived file.
 
     Captions must always be the LAST layer. Editing or hooking a clip that
     already had them burned in produced `edited_subtitled_<...>`, and the next
@@ -219,7 +200,7 @@ def _reapply_captions(job_id, clip_index, video_path):
         clip = clips[clip_index]
         import main as _main
         return _main.auto_caption_clip(video_path, transcript,
-                                       clip['start'], clip['end'])
+                                       clip['start'], clip['end'], force=True)
     except Exception as e:
         print(f"⚠️  Could not re-apply captions to {video_path}: {e}")
         return None
@@ -1720,9 +1701,9 @@ class RemoveSubtitlesRequest(BaseModel):
 async def remove_subtitles(req: RemoveSubtitlesRequest, request: Request):
     """Point a clip back at its un-captioned original.
 
-    Clips ship captioned by default now, so there has to be a way out — without
-    this, a user who doesn't want captions is stuck with them. No re-encode and
-    the pipeline always keeps the clean file next to the derived
+    New clips start without captions, but users can add them later. No
+    re-encode is needed to undo that choice: the pipeline keeps the clean file
+    next to the derived
     ``subtitled_<ts>_`` one, so removing is just choosing the other file.
     """
     await _ensure_job_files(req.job_id, request)
@@ -1975,173 +1956,6 @@ async def translate_clip(
         "success": True,
         "new_video_url": f"/videos/{req.job_id}/{output_filename}"
     }
-
-class SocialPostRequest(BaseModel):
-    job_id: str
-    clip_index: int
-    api_key: Optional[str] = None  # BYOK Upload-Post key
-    user_id: Optional[str] = None  # BYOK Upload-Post profile
-    platforms: List[str] # ["tiktok", "instagram", "youtube"]
-    # Optional overrides if frontend wants to edit them
-    title: Optional[str] = None
-    description: Optional[str] = None
-    scheduled_date: Optional[str] = None # ISO-8601 string
-    timezone: Optional[str] = "UTC"
-
-import httpx
-
-@app.post("/api/social/post")
-async def post_to_socials(req: SocialPostRequest, request: Request):
-    await _ensure_job_files(req.job_id, request)
-    if req.job_id not in jobs:
-        raise HTTPException(status_code=404, detail="Job not found")
-
-    upload_key, configured_user = await resolve_upload_post(request, req.api_key)
-    if not upload_key:
-        raise HTTPException(status_code=400, detail="Missing Upload-Post API key")
-    post_user = req.user_id or configured_user
-    if not post_user:
-        raise HTTPException(status_code=400, detail="Missing Upload-Post user profile")
-
-    job = jobs[req.job_id]
-    if 'result' not in job or 'clips' not in job['result']:
-        raise HTTPException(status_code=400, detail="Job result not available")
-
-    try:
-        clip = job['result']['clips'][req.clip_index]
-        # Video URL is relative /videos/..., we need absolute file path
-        # clip['video_url'] is like "/videos/{job_id}/{filename}"
-        # We constructed it as: f"/videos/{job_id}/{clip_filename}"
-        # And file is at f"{OUTPUT_DIR}/{job_id}/{clip_filename}"
-        
-        filename = clip['video_url'].split('/')[-1]
-        file_path = os.path.join(OUTPUT_DIR, req.job_id, filename)
-        
-        if not os.path.exists(file_path):
-             raise HTTPException(status_code=404, detail=f"Video file not found: {file_path}")
-
-        # Construct parameters for Upload-Post API
-        # Fallbacks
-        final_title = req.title or clip.get('title', 'Viral Short')
-        final_description = req.description or clip.get('video_description_for_instagram') or clip.get('video_description_for_tiktok') or "Check this out!"
-        
-        # Prepare form data
-        url = "https://api.upload-post.com/api/upload"
-        headers = {
-            "Authorization": f"Apikey {upload_key}"
-        }
-
-        # Prepare data as dict (httpx handles lists for multiple values)
-        data_payload = {
-            "user": post_user,
-            "title": final_title,
-            "platform[]": req.platforms, # Pass list directly
-            "async_upload": "true"  # Enable async upload
-        }
-
-        # Add scheduling if present
-        if req.scheduled_date:
-            data_payload["scheduled_date"] = req.scheduled_date
-            if req.timezone:
-                data_payload["timezone"] = req.timezone
-        
-        # Add Platform specifics
-        if "tiktok" in req.platforms:
-             data_payload["tiktok_title"] = final_description
-             data_payload["post_mode"] = TIKTOK_POST_MODE
-             
-        if "instagram" in req.platforms:
-             data_payload["instagram_title"] = final_description
-             data_payload["media_type"] = "REELS"
-
-        if "youtube" in req.platforms:
-             yt_title = req.title or clip.get('video_title_for_youtube_short', final_title)
-             data_payload["youtube_title"] = yt_title
-             data_payload["youtube_description"] = final_description
-             data_payload["privacyStatus"] = "public"
-
-        # Send File
-        # httpx AsyncClient requires async file reading or bytes. 
-        # Since we have MAX_FILE_SIZE_MB, reading into memory is safe-ish.
-        with open(file_path, "rb") as f:
-            file_content = f.read()
-            
-        files = {
-            "video": (filename, file_content, "video/mp4")
-        }
-
-        # Switch to synchronous Client to avoid "sync request with AsyncClient" error with multipart/files
-        with httpx.Client(timeout=120.0) as client:
-            print(f"📡 Sending to Upload-Post for platforms: {req.platforms}")
-            response = client.post(url, headers=headers, data=data_payload, files=files)
-            
-        if response.status_code not in [200, 201, 202]: # Added 201
-             print(f"❌ Upload-Post Error: {response.text}")
-             raise HTTPException(status_code=response.status_code, detail=f"Vendor API Error: {response.text}")
-
-        return response.json()
-
-    except Exception as e:
-        print(f"❌ Social Post Exception: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/social/user")
-async def get_social_user(request: Request):
-    """Proxy to fetch user profiles from Upload-Post.
-
-    Uses the caller's Upload-Post key and returns profiles on that account.
-    """
-    api_key, _ = await resolve_upload_post(request, None)
-    if not api_key:
-         raise HTTPException(status_code=400, detail="Missing X-Upload-Post-Key header")
-
-    url = "https://api.upload-post.com/api/uploadposts/users"
-    print(f"🔍 Fetching User ID from: {url}")
-    headers = {"Authorization": f"Apikey {api_key}"}
-    
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        try:
-            resp = await client.get(url, headers=headers)
-            if resp.status_code != 200:
-                print(f"❌ Upload-Post User Fetch Error: {resp.text}")
-                raise HTTPException(status_code=resp.status_code, detail=f"Failed to fetch user: {resp.text}")
-            
-            data = resp.json()
-            print(f"🔍 Upload-Post User Response: {data}")
-            
-            user_id = None
-            # The structure is {'success': True, 'profiles': [{'username': '...'}, ...]}
-            profiles_list = []
-            if isinstance(data, dict):
-                 raw_profiles = data.get('profiles', [])
-                 if isinstance(raw_profiles, list):
-                     for p in raw_profiles:
-                         username = p.get('username')
-                         if username:
-                             # Determine connected platforms
-                             socials = p.get('social_accounts', {})
-                             connected = []
-                             # Check typical platforms
-                             for platform in ['tiktok', 'instagram', 'youtube']:
-                                 account_info = socials.get(platform)
-                                 # If it's a dict and typically has data, or just not empty string
-                                 if isinstance(account_info, dict):
-                                     connected.append(platform)
-                             
-                             profiles_list.append({
-                                 "username": username,
-                                 "connected": connected
-                             })
-            
-            if not profiles_list:
-                # Fallback if no profiles found
-                return {"profiles": [], "error": "No profiles found"}
-
-            return {"profiles": profiles_list}
-            
-            
-        except Exception as e:
-             raise HTTPException(status_code=500, detail=str(e))
 
 # --- Thumbnail Studio Endpoints ---
 
@@ -2483,104 +2297,3 @@ async def thumbnail_describe(
     except Exception as e:
         print(f"❌ Thumbnail Describe Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/thumbnail/publish")
-async def thumbnail_publish(
-    request: Request,
-    background_tasks: BackgroundTasks,
-    session_id: str = Form(...),
-    title: str = Form(...),
-    description: str = Form(...),
-    thumbnail_url: str = Form(...),
-    api_key: Optional[str] = Form(None),   # BYOK Upload-Post key
-    user_id: Optional[str] = Form(None),   # BYOK Upload-Post profile
-):
-    """Kick off a background upload to YouTube via Upload-Post and return immediately."""
-    if session_id not in thumbnail_sessions:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    upload_key, configured_user = await resolve_upload_post(request, api_key)
-    if not upload_key:
-        raise HTTPException(status_code=400, detail="Missing Upload-Post API key")
-    post_user = user_id or configured_user
-    if not post_user:
-        raise HTTPException(status_code=400, detail="Missing Upload-Post user profile")
-
-    session = thumbnail_sessions[session_id]
-    video_path = session.get("video_path")
-    if not video_path or not os.path.exists(video_path):
-        raise HTTPException(status_code=404, detail="Original video file not found")
-
-    # Resolve thumbnail path from URL — sanitize against path traversal so a
-    # crafted thumbnail_url (e.g. "thumbnails/../../.env") can't read server
-    # files and exfiltrate them via the Upload-Post multipart body.
-    thumb_relative = thumbnail_url.lstrip("/")
-    if thumb_relative.startswith("thumbnails/"):
-        thumb_path = _safe_under(OUTPUT_DIR, thumb_relative)
-    else:
-        thumb_path = _safe_under(THUMBNAILS_DIR, thumb_relative)
-
-    if not thumb_path:
-        raise HTTPException(status_code=400, detail="Invalid thumbnail path")
-    if not os.path.exists(thumb_path):
-        raise HTTPException(status_code=404, detail="Thumbnail file not found")
-
-    # Generate a unique ID for this publish job so the frontend can poll
-    publish_id = str(uuid.uuid4())
-    publish_jobs[publish_id] = {"status": "uploading", "result": None, "error": None}
-
-    def do_upload():
-        """Runs in a thread via BackgroundTasks — does the actual multipart upload."""
-        try:
-            upload_url = "https://api.upload-post.com/api/upload"
-            headers = {"Authorization": f"Apikey {upload_key}"}
-            data_payload = {
-                "user": post_user,
-                "platform[]": ["youtube"],
-                "title": title,          # required base field (fallback)
-                "async_upload": "true",
-                "youtube_title": title,
-                "youtube_description": description,
-                "privacyStatus": "public",
-            }
-            video_filename = os.path.basename(video_path)
-            thumb_filename = os.path.basename(thumb_path)
-
-            print(f"📡 [Thumbnail] Publishing to YouTube via Upload-Post... (publish_id={publish_id})")
-            with open(video_path, "rb") as vf, open(thumb_path, "rb") as tf:
-                files = {
-                    "video": (video_filename, vf.read(), "video/mp4"),
-                    "thumbnail": (thumb_filename, tf.read(), "image/jpeg"),
-                }
-
-            # Use a long timeout — video uploads can take several minutes
-            with httpx.Client(timeout=600.0) as client:
-                response = client.post(upload_url, headers=headers, data=data_payload, files=files)
-
-            if response.status_code not in [200, 201, 202]:
-                err = f"Upload-Post API Error ({response.status_code}): {response.text}"
-                print(f"❌ {err}")
-                publish_jobs[publish_id]["status"] = "failed"
-                publish_jobs[publish_id]["error"] = err
-            else:
-                print(f"✅ [Thumbnail] Published successfully (publish_id={publish_id})")
-                publish_jobs[publish_id]["status"] = "done"
-                publish_jobs[publish_id]["result"] = response.json()
-
-        except Exception as e:
-            err = str(e)
-            print(f"❌ Thumbnail Publish Background Error: {err}")
-            publish_jobs[publish_id]["status"] = "failed"
-            publish_jobs[publish_id]["error"] = err
-
-    background_tasks.add_task(do_upload)
-    return {"publish_id": publish_id, "status": "uploading"}
-
-
-@app.get("/api/thumbnail/publish/status/{publish_id}")
-async def thumbnail_publish_status(publish_id: str):
-    """Poll the status of a background publish job."""
-    if publish_id not in publish_jobs:
-        raise HTTPException(status_code=404, detail="Publish job not found")
-    return publish_jobs[publish_id]

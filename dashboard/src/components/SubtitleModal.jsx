@@ -478,9 +478,9 @@ export default function SubtitleModal({ isOpen, onClose, onGenerate, onApplyAll,
                                                 : `apply this style to all ${bulkCount} clips`}
                                         </button>
                                     )}
-                                    {/* Clips ship captioned by default, so the way
-                                        out has to be here — otherwise a user who
-                                        doesn't want captions is stuck with them. */}
+                                    {/* New clips start without captions, but a
+                                        user can undo a subtitle layer added
+                                        from this editor. */}
                                     {onRemove && (
                                         <button
                                             onClick={onRemove}

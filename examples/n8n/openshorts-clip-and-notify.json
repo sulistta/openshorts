@@ -1,5 +1,5 @@
 {
-  "name": "OpenShorts: video URL in, published-ready clips out (no polling)",
+  "name": "OpenShorts: video URL in, ready clips out (no polling)",
   "nodes": [
     {
       "parameters": {
@@ -180,7 +180,7 @@
     },
     {
       "parameters": {
-        "content": "## Do something with the clips\n\nConnect *Clip title + download link* to whatever comes next: a Slack or email notification, a Google Sheet log, or post them directly via `POST /api/social/post`.\n\nEach item here is one finished 9:16 clip with subtitles burned in.",
+        "content": "## Do something with the clips\n\nConnect *Clip title + download link* to a Slack or email notification, a Google Sheet log, or your own local workflow.\n\nEach item here is one finished 9:16 clip.",
         "height": 220,
         "width": 340
       },

@@ -6,7 +6,7 @@ needed by MCP clients: initialize, tools/list, tools/call and notifications.
 
 Tools don't reimplement anything: each one is an in-process HTTP call back into
 this same app (httpx ASGITransport). The single-tenant server accepts BYOK
-headers such as ``X-Gemini-Key`` and ``X-Upload-Post-Key`` when needed.
+headers such as ``X-Gemini-Key`` when needed.
 
 Connect with any MCP client pointed at the local desktop endpoint, for example:
     claude mcp add --transport http openshorts http://127.0.0.1:37831/mcp
@@ -29,11 +29,11 @@ INSTRUCTIONS = (
     "OpenShorts turns long videos (YouTube URLs) into viral-ready vertical "
     "clips. Typical flow: process_video -> poll get_job_status until "
     "'completed' (a job takes minutes; poll every 30-60s or pass webhook_url) "
-    "-> list_clips -> optionally add_subtitles / publish_clip."
+    "-> list_clips -> optionally add_subtitles."
 )
 
 # BYOK headers are forwarded to the internal endpoints.
-_FORWARD_HEADERS = ("x-gemini-key", "x-upload-post-key", "x-upload-post-user")
+_FORWARD_HEADERS = ("x-gemini-key",)
 
 _LOG_TAIL = 10  # status logs are for humans; agents only need the tail
 
@@ -44,8 +44,9 @@ TOOLS = [
         "title": "Process a video into short clips",
         "description": (
             "Start clipping a video: downloads the source, transcribes it, finds "
-            "the most viral moments with AI and renders vertical (9:16) clips "
-            "with captions. Returns a job_id immediately — the work takes "
+            "the most viral moments with AI and renders vertical (9:16) clips. "
+            "Captions can be added later with add_subtitles. Returns a job_id "
+            "immediately — the work takes "
             "minutes; poll get_job_status or pass webhook_url to be called back. "
             "The caller must own the content or hold the rights to process it "
             "(confirm_rights)."
@@ -125,8 +126,8 @@ TOOLS = [
         "name": "add_subtitles",
         "title": "Burn styled captions onto a clip",
         "description": (
-            "Re-style the captions of one clip (clips already ship with default "
-            "captions). style 'karaoke' highlights the active word."
+            "Burn styled captions onto one clip. style 'karaoke' highlights the "
+            "active word."
         ),
         "inputSchema": {
             "type": "object",
@@ -142,32 +143,6 @@ TOOLS = [
                 "uppercase": {"type": "boolean"},
             },
             "required": ["job_id", "clip_index"],
-        },
-    },
-    {
-        "name": "publish_clip",
-        "title": "Publish a clip to social platforms",
-        "description": (
-            "Post one clip to the user's connected accounts (TikTok lands as a "
-            "draft in the app; Instagram and YouTube publish directly). Requires "
-            "an Upload-Post key and profile configured by the caller. "
-            "Optionally schedule with an ISO-8601 scheduled_date."
-        ),
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "job_id": {"type": "string"},
-                "clip_index": {"type": "integer"},
-                "platforms": {
-                    "type": "array",
-                    "items": {"type": "string", "enum": ["tiktok", "instagram", "youtube"]},
-                },
-                "title": {"type": "string"},
-                "description": {"type": "string"},
-                "scheduled_date": {"type": "string", "description": "ISO-8601; omit to post now."},
-                "timezone": {"type": "string"},
-            },
-            "required": ["job_id", "clip_index", "platforms"],
         },
     },
 ]
@@ -273,24 +248,11 @@ async def _tool_add_subtitles(client, args):
     return resp.json(), False
 
 
-async def _tool_publish_clip(client, args):
-    body = {"job_id": args["job_id"], "clip_index": args["clip_index"],
-            "platforms": args["platforms"]}
-    for k in ("title", "description", "scheduled_date", "timezone"):
-        if args.get(k) is not None:
-            body[k] = args[k]
-    resp = await client.post("/api/social/post", json=body)
-    if resp.status_code >= 400:
-        return _api_error(resp), True
-    return resp.json(), False
-
-
 _TOOL_IMPLS = {
     "process_video": _tool_process_video,
     "get_job_status": _tool_get_job_status,
     "list_clips": _tool_list_clips,
     "add_subtitles": _tool_add_subtitles,
-    "publish_clip": _tool_publish_clip,
 }
 
 

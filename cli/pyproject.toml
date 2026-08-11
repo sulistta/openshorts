@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "openshorts"
 version = "0.1.0"
-description = "CLI for OpenShorts: clip long videos into vertical shorts and publish them, from the terminal"
+description = "CLI for OpenShorts: clip long videos into vertical shorts from the terminal"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }

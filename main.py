@@ -805,23 +805,31 @@ def finalize_clip_passthrough(input_video, final_output_video):
     return True
 
 
-def auto_caption_clip(clip_path, transcript, clip_start, clip_end):
-    """Burn the default caption style onto a finished clip.
+def _auto_captions_enabled():
+    """Whether newly generated clips should receive automatic captions."""
+    return os.environ.get("AUTO_CAPTIONS", "0").strip().lower() in {
+        "1", "true", "yes", "on"
+    }
 
-    Captions are mandatory for short-form to land, but they were opt-in behind a
-    modal and only 9% of delivered clips ever got them (prod audit, 25-jul-2026).
-    So every clip now ships captioned by default.
+
+def auto_caption_clip(clip_path, transcript, clip_start, clip_end, force=False):
+    """Burn the default caption style onto a finished clip when requested.
+
+    Automatic captions are disabled by default. Set ``AUTO_CAPTIONS=1`` to
+    burn them into every newly generated clip. ``force=True`` is reserved for
+    a clip that already has user-applied captions and is being edited: it keeps
+    that explicit choice intact regardless of the global default.
 
     The captioned file is written ALONGSIDE the clip as
     ``subtitled_<ts>_<clip>.mp4`` — the same convention /api/subtitle uses — so
     the untouched original stays on disk and re-styling from the modal replaces
     the captions instead of burning a second layer over them.
 
-    Returns the captioned path, or None when captions were skipped (silent
-    video, no words in range, AUTO_CAPTIONS=0, or any failure — a caption
-    problem must never cost the user the clip they already paid for).
+    Returns the captioned path, or None when captions were skipped (automatic
+    captions disabled, silent video, no words in range, or any failure — a
+    caption problem must never cost the user the clip they already paid for).
     """
-    if os.environ.get("AUTO_CAPTIONS", "1").strip() == "0":
+    if not force and not _auto_captions_enabled():
         return None
     if not transcript or not transcript.get('segments'):
         return None  # silent video: nothing to caption

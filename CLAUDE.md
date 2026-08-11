@@ -16,9 +16,9 @@ desktop shell, MCP server, and CLI aligned with the loopback-only contract.
 
 ## API contract
 
-The public MCP tools are `process_video`, `get_job_status`, `list_clips`,
-`add_subtitles`, and `publish_clip`. Do not add account, quota, billing, or
-remote-storage assumptions to these contracts. Deletion requires an explicit
+The public MCP tools are `process_video`, `get_job_status`, `list_clips`, and
+`add_subtitles`. Do not add account, quota, billing, remote-storage, or social
+publishing assumptions to these contracts. Deletion requires an explicit
 `confirm=true` query parameter.
 
 ## Useful commands
