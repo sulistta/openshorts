@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openshorts-mcp"
+version = "2.0.0"
+description = "Local stdio MCP server for deterministic short-form video editing"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "OpenShorts"}]
+keywords = ["mcp", "video", "ffmpeg", "shorts", "local"]
+dependencies = [
+  "mcp>=1.27,<2",
+  "pydantic-settings>=2.5.2",
+  "Pillow>=10",
+  "yt-dlp>=2025.1.15",
+  "faster-whisper>=1.2.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+openshorts-mcp = "openshorts_mcp.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["openshorts_mcp*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

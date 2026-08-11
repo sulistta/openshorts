@@ -1,53 +1,40 @@
 ---
 name: openshorts
-version: 1.0.0
-description: Use the local OpenShorts desktop app to turn long videos into vertical clips and edit captions.
+version: 2.0.0
+description: Use the local OpenShorts stdio MCP server to inspect media and create deterministic short-form video artifacts.
 homepage: https://github.com/mutonby/openshorts
 metadata:
   openclaw:
     emoji: "🎬"
-    primaryEnv: OPENSHORTS_API_URL
   hermes:
     category: media
-    tags: [video, clips, shorts, captions, automation]
+    tags: [video, clips, shorts, captions, local, mcp]
 ---
 
-# OpenShorts: clip and edit video
+# OpenShorts MCP
 
-OpenShorts turns a long video into vertical clips with word-level subtitles.
-Jobs are asynchronous: submit, then use a webhook or poll until completion.
+OpenShorts is a local stdio MCP server. It does not expose REST, HTTP,
+webhooks, a browser UI, social publishing or provider-key features.
 
-## Connect
+## Workflow
 
-Point MCP or REST at the running desktop app. The default is
-`http://127.0.0.1:37831`; there is no account login or service API key.
-Provider BYOK headers are optional:
+1. Call import_media with an absolute source_path or source_url and
+   confirm_rights=true.
+2. Poll get_job_status until the import completes.
+3. Call read_transcript and get_contact_sheet. Use those local signals to make
+   editorial choices yourself.
+4. Call render_clips with explicit 15-60 second ranges, output_format and
+   layout.
+5. Poll the render job, then use returned artifact IDs for follow-up edits.
 
-- `X-Gemini-Key` for AI analysis and editing
+## Editing contract
 
-## Core loop
+- output_format: vertical, horizontal or square.
+- layout: center_crop, blur_fill or fit.
+- Effects are structured decisions only: zoom_in, punch_in, zoom_pulse,
+  color_pop, bw_moment, flash and vignette.
+- Subtitles are disabled by default. Call add_subtitles explicitly.
+- Every transformation makes a new immutable local artifact.
+- Use delete_project only after explicit confirmation from the user.
 
-1. Submit `POST /api/process` with `{"url":"...", "acknowledged":true}`.
-2. Poll `GET /api/status/{job_id}` every few seconds, or provide
-   `webhook_url` and `webhook_secret` for an HMAC-signed callback.
-3. Read `result.clips` and use their local `video_url` or download endpoint.
-4. Optionally restyle captions with `POST /api/subtitle`, then download the
-   finished clips locally.
-
-The MCP server exposes `process_video`, `get_job_status`, `list_clips`, and
-`add_subtitles`.
-
-## Rules
-
-- Only process content the user owns or is authorized to use.
-- Projects are durable in the local application-data directory; deletion is
-  explicit through the dashboard or DELETE API endpoint.
-- Keep provider costs and credentials under the user's own accounts.
-
-## CLI shortcut
-
-```bash
-export OPENSHORTS_API_URL=http://127.0.0.1:37831
-uvx openshorts process <url> --wait
-openshorts clips <job_id>
-```
+All result paths are absolute local paths under OPENSHORTS_OUTPUT_DIR.

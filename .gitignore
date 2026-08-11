@@ -11,13 +11,11 @@
 .venv/
 __pycache__/
 *.pyc
+*.egg-info/
 
-# Temporary files / runtime dirs
-temp_*
-uploads/
-downloads/
-videos/
+# Runtime data (never remove output automatically; migrate it explicitly)
 output/
+output-legacy-*/
 
 # OS / IDE
 .DS_Store
@@ -33,11 +31,6 @@ output/
 # Cache dirs
 .cache/
 .config/
-# Desktop build artifacts
-dashboard/src-tauri/target/
-dashboard/src-tauri/binaries/*
-!dashboard/src-tauri/binaries/.gitignore
-build/pyinstaller/
 # Multi-agent Skills
 .agents/
 .agent/

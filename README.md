@@ -1,94 +1,96 @@
-# OpenShorts
+# OpenShorts MCP
 
-OpenShorts is a local desktop application that turns long videos into vertical
-clips and adds subtitles and effects. It uses Tauri v2 for the native shell and
-runs the Python video pipeline as a loopback-only sidecar.
+OpenShorts is now a local, stdio-only MCP server. It has no dashboard, Tauri
+application, REST API, webhook, social-network publishing integration, Docker
+requirement, Gemini integration, thumbnail generator or automatic clip picker.
 
-The project has no hosted account, subscription, quota, billing, or remote
-project storage. In packaged builds, projects live in the operating system's
-application-data directory; in source development, they live under `output/`.
+An LLM receives local transcript and contact-sheet context, decides the cut
+ranges and sends only validated editing operations. FFmpeg performs the cuts,
+reframe, captions, overlays and structured effects locally. No Gemini key is
+read or required.
 
-## Run in development
+## Install
 
-Install the Tauri prerequisites for your operating system, Python 3.11+, Node
-20+, Rust, and FFmpeg. Then create a Python environment and launch the desktop
-app:
+Requirements: Python 3.10+, FFmpeg and FFprobe available on PATH.
 
-```bash
-cd dashboard
-npm install
-npm run setup:backend
-npm run tauri:dev
-```
+    python3 -m venv .venv
+    . .venv/bin/activate
+    python -m pip install -e .
 
-`setup:backend` creates `.venv` at the repository root and installs the Python
-requirements with CPU PyTorch wheels by default. `tauri:dev` automatically uses that environment, starts the
-local backend on `127.0.0.1:37831`, and opens the native window. Browser-only
-frontend work remains available with `npm run dev`; it proxies API calls to
-that same local backend.
+The first transcription downloads the selected faster-whisper model if it is
+not already cached. Inference then runs on the local machine. Select a model
+or device with WHISPER_MODEL, WHISPER_DEVICE and WHISPER_COMPUTE.
 
-For a CUDA or ROCm build, set `OPENSHORTS_TORCH_INDEX` to the matching PyTorch
-wheel index before running `npm run setup:backend` or `npm run tauri:build`.
+## One-time legacy migration
 
-## Build native installers
+The old output directory is intentionally never moved when the MCP starts.
+If this repository already has legacy projects under output, run this explicit
+command once:
 
-Build each target on a matching operating system and architecture. The build
-packages the Python backend with PyInstaller, names the sidecar for Tauri's
-target triple, then produces the platform installer.
+    .venv/bin/openshorts-mcp migrate-legacy
 
-```bash
-cd dashboard
-npm install
-npm run setup:backend
-npm run tauri:build
-```
+It renames output to output-legacy-YYYYMMDD-HHMMSS and creates a clean output
+directory. Set OPENSHORTS_OUTPUT_DIR before the command to migrate a different
+dedicated output folder. Existing legacy media is preserved; it is not
+compatible with the new artifact manifest format.
 
-The backend bundle includes the Python application and its model libraries.
-FFmpeg remains a native system prerequisite, so it must be installed and
-available on `PATH` on each computer that processes video.
+## Connect an MCP client
 
-## Provider keys (BYOK)
+Use the installed executable as a stdio server. A typical MCP configuration is:
 
-The optional provider environment variables are:
+    {
+      "mcpServers": {
+        "openshorts": {
+          "command": "/absolute/path/to/openshorts/.venv/bin/openshorts-mcp",
+          "env": {
+            "OPENSHORTS_OUTPUT_DIR": "/absolute/path/to/openshorts/output"
+          }
+        }
+      }
+    }
 
-| Variable | Used for |
-| --- | --- |
-| `GEMINI_API_KEY` | AI analysis, titles, effects and thumbnail studio |
-| `YOUTUBE_COOKIES` | Optional YouTube URL ingestion |
-| `WHISPER_MODEL`, `WHISPER_DEVICE`, `WHISPER_COMPUTE` | Local transcription tuning |
-| `AUTO_CAPTIONS` | Set to `1` to burn subtitles automatically on new clips (off by default) |
-| `OUTPUT_MAX_GB`, `UPLOADS_MAX_GB` | Local disk caps for transient work |
+Do not configure an HTTP URL. Starting the command opens no port; stdout is
+reserved exclusively for MCP messages.
 
-For browser-supplied BYOK, configure the Gemini key in Settings or send it as
-`X-Gemini-Key`; keys are not stored in the project library. OpenShorts creates,
-edits, and downloads clips locally; it does not publish to social networks.
+## Editing workflow
 
-## Local API, MCP and CLI
+1. Call import_media with one absolute local source_path or public source_url
+   and confirm_rights=true.
+2. Poll get_job_status until it completes.
+3. Call read_transcript and get_contact_sheet. The contact sheet is returned as
+   an MCP image as well as an absolute local JPEG path.
+4. The LLM chooses exact 15-60 second ranges, then calls render_clips.
+5. Poll the render job. Its result exposes immutable artifact IDs and absolute
+   paths.
+6. Optionally call apply_effects, add_subtitles or add_hook_overlay. Each
+   creates a new artifact and leaves its parent intact.
 
-While OpenShorts is running, its API is deliberately bound only to
-`http://127.0.0.1:37831`. The REST documentation is at `/docs` and the MCP
-endpoint is `/mcp`. This allows the bundled CLI and local automation tools to
-use the same active application without exposing a network service.
+Available reframe layouts are center_crop, blur_fill and fit. Output formats
+are vertical, horizontal and square. Effects are zoom_in, punch_in, zoom_pulse,
+color_pop, bw_moment, flash and vignette. Raw FFmpeg filters are not accepted.
+Zoom effects are refused after text layers so captions and hooks stay visible.
 
-```bash
-export OPENSHORTS_API_URL=http://127.0.0.1:37831
-uvx openshorts process 'https://youtube.com/watch?v=...' --wait
-openshorts clips <job_id>
-```
+Subtitles are disabled by default and are only burned when add_subtitles is
+called explicitly.
 
-Use `webhook_url` and `webhook_secret` on `/api/process` for an HMAC-signed
-completion callback. Callback links are local to the running app and remain
-available until the project is explicitly deleted.
+## Local data
+
+OPENSHORTS_OUTPUT_DIR defaults to ./output. The server stores:
+
+- copied source media;
+- media metadata, word-level transcript and contact sheets;
+- persistent job states;
+- immutable MP4 artifacts and subtitle sidecars.
+
+Use list_projects, get_project and delete_project to manage that local state.
+delete_project requires confirm=true and permanently removes that one project's
+copied source, analysis and artifacts.
 
 ## Development checks
 
-```bash
-python3 -m py_compile app.py mcp_server.py local_library.py desktop/backend.py
-cd dashboard && npm run build
-cd dashboard/src-tauri && cargo check
-```
-
-Some media checks require FFmpeg and model dependencies.
+    .venv/bin/python -m pip install -e ".[dev]"
+    .venv/bin/python -m pytest
+    .venv/bin/python -m py_compile openshorts_mcp/*.py
 
 ## License
 
