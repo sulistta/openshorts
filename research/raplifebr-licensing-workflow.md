@@ -1,4 +1,4 @@
-# traplifebr — fluxo de licenciamento e operação
+# raplifebr — fluxo de licenciamento e operação
 
 **Estado:** pesquisa e preparação; nenhum vídeo foi baixado, editado ou publicado.
 
@@ -40,7 +40,7 @@ substituem a licença específica do fonograma e do uso audiovisual.[5][6]
    gravadora/distribuidora, compositores, editora e URL do canal oficial.
 2. **Localizar o decisor:** artista, empresário, gravadora, editora ou
    distribuidora; começar sempre por um contato público/oficial.
-3. **Enviar pedido escrito** descrevendo a página `traplifebr`, formatos,
+3. **Enviar pedido escrito** descrevendo a página `raplifebr`, formatos,
    plataformas, território, prazo, volume de até 10 posts/dia, monetização,
    impulsionamento, edição e atribuição.
 4. **Obter autorização assinada** ou contrato/termos inequívocos. Guardar a
@@ -92,7 +92,7 @@ armazenar credenciais no chat.[3][4]
 
 ## Pedido de licença — texto-base
 
-> Olá, [titular]. A página `traplifebr` pretende publicar cortes verticais
+> Olá, [titular]. A página `raplifebr` pretende publicar cortes verticais
 > curtos para Reels, TikTok e YouTube Shorts usando [faixa/ISRC] e [material
 > visual]. Solicitamos autorização escrita para sincronização, edição,
 > reprodução e publicação orgânica em [território], de [data] a [data], em até
