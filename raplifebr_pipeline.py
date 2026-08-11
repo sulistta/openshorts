@@ -31,6 +31,7 @@ STATUSES = {
     "publishing",
     "published",
     "failed",
+    "deleted",
 }
 ACTIVE_STATUSES = {"processing", "processed", "ready_to_publish", "publishing", "published"}
 
@@ -154,6 +155,7 @@ def add_candidate(registry: dict[str, Any], candidate: dict[str, Any]) -> dict[s
         "final_file": None,
         "generated_at": None,
         "caption": None,
+        "caption_verified": False,
         "instagram_url": None,
         "validation": None,
         "error": None,
@@ -234,6 +236,18 @@ def caption_for(artist: str, track: str, hook: str = "", variant: int = 0) -> st
         hook=hook or "O momento que fica na cabeça.",
         hashtag=_hashtag(artist),
     )
+
+
+def _normalise_caption(value: str) -> str:
+    return re.sub(r"\s+", " ", str(value or "")).strip()
+
+
+def confirm_caption(item: dict[str, Any], observed: str) -> bool:
+    expected = _normalise_caption(item.get("caption", ""))
+    actual = _normalise_caption(observed)
+    verified = bool(expected) and expected in actual
+    item["caption_verified"] = verified
+    return verified
 
 
 def validate_probe(
@@ -355,7 +369,6 @@ def process_candidate(
     sleep: Callable[[float], None] = time.sleep,
     max_polls: int = 120,
     poll_interval: float = 30.0,
-    add_subtitles: bool = True,
 ) -> dict[str, Any]:
     if item.get("rights_status") != "approved" or not (item.get("license_proof") or item.get("rights_basis")):
         raise RightsNotConfirmed(
@@ -391,16 +404,6 @@ def process_candidate(
 
         listed = mcp.list_clips(job_id)
         selected = select_best_clip(listed.get("clips") or [])
-        if add_subtitles:
-            subtitled = mcp.add_subtitles(
-                job_id,
-                int(selected.get("index", 0)),
-                style="karaoke",
-                position="bottom",
-                font_size=16,
-                uppercase=False,
-            )
-            selected["video_url"] = subtitled.get("new_video_url") or subtitled.get("video_url") or selected.get("video_url")
 
         start = float(selected["start"])
         end = float(selected["end"])
@@ -419,6 +422,7 @@ def process_candidate(
                 item["artist"], item["track"], selected.get("viral_hook_text", ""),
                 variant=len(item.get("history", [])),
             ),
+            "caption_verified": False,
         })
         if not validation.get("valid"):
             raise PipelineError("Final video validation failed")
@@ -449,6 +453,8 @@ def publish_item(
     caption = str(item.get("caption") or "")
     if not final_file or not caption:
         raise PipelineError("Ready item is missing final_file or caption")
+    if not item.get("caption_verified"):
+        raise PipelineError("caption has not been verified in the Instagram composer")
 
     transition(item, "publishing", error=None)
     try:
@@ -476,7 +482,6 @@ def process_batch(
     sleep: Callable[[float], None] = time.sleep,
     max_polls: int = 120,
     poll_interval: float = 30.0,
-    add_subtitles: bool = True,
 ) -> dict[str, list[str]]:
     """Process a bounded Instagram-only batch and isolate per-item failures."""
     result = {"processed": [], "published": [], "blocked": [], "failed": []}
@@ -495,7 +500,6 @@ def process_batch(
                 sleep=sleep,
                 max_polls=max_polls,
                 poll_interval=poll_interval,
-                add_subtitles=add_subtitles,
             )
             result["processed"].append(item["id"])
             if publisher is not None:
@@ -574,7 +578,6 @@ def _cli() -> int:
     parser.add_argument("--output-root", default=os.environ.get("OPENSHORTS_DATA_DIR", "output"))
     parser.add_argument("--poll-interval", type=float, default=30.0)
     parser.add_argument("--max-polls", type=int, default=120)
-    parser.add_argument("--no-subtitles", action="store_true")
     args = parser.parse_args()
 
     registry = load_registry(args.registry)
@@ -600,7 +603,6 @@ def _cli() -> int:
             output_root=args.output_root,
             poll_interval=args.poll_interval,
             max_polls=args.max_polls,
-            add_subtitles=not args.no_subtitles,
         )
         save_registry(args.registry, registry)
         print(json.dumps(result, ensure_ascii=False, indent=2))
@@ -620,7 +622,6 @@ def _cli() -> int:
             output_root=args.output_root,
             poll_interval=args.poll_interval,
             max_polls=args.max_polls,
-            add_subtitles=not args.no_subtitles,
         )
     except RightsNotConfirmed as exc:
         print(json.dumps({"status": item["status"], "error": str(exc)}, ensure_ascii=False))

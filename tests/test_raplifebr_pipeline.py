@@ -4,10 +4,12 @@ import pytest
 
 from raplifebr_pipeline import (
     HumanInterventionRequired,
+    PipelineError,
     RightsNotConfirmed,
     add_candidate,
     approve_items,
     caption_for,
+    confirm_caption,
     has_duplicate_clip,
     new_registry,
     publish_item,
@@ -113,6 +115,16 @@ def test_caption_varies_and_contains_artist_track_and_hashtag():
     assert "Esse momento!" in second
 
 
+def test_confirm_caption_requires_expected_text_and_marks_verified():
+    item = add_candidate(new_registry(), _approved_candidate())
+    item["caption"] = "Uma legenda importante #rapbr"
+
+    assert confirm_caption(item, "Uma legenda importante #rapbr") is True
+    assert item["caption_verified"] is True
+    assert confirm_caption(item, "Legenda diferente") is False
+    assert item["caption_verified"] is False
+
+
 def test_validate_probe_requires_vertical_video_audio_and_decode():
     good = validate_probe({
         "width": 1080,
@@ -158,7 +170,7 @@ def test_process_candidate_uses_mcp_then_marks_ready_to_publish(tmp_path):
     assert result["clip_end"] == 42.5
     assert result["caption"]
     assert [call[0] for call in mcp.calls] == [
-        "process_video", "get_job_status", "list_clips", "add_subtitles"
+        "process_video", "get_job_status", "list_clips"
     ]
 
 
@@ -179,7 +191,7 @@ def test_process_candidate_does_not_attest_rights_for_unlicensed_item():
 def test_publish_item_records_instagram_url_and_status():
     registry = new_registry()
     item = add_candidate(registry, _approved_candidate())
-    item.update({"status": "ready_to_publish", "final_file": "/tmp/reel.mp4", "caption": "Legenda"})
+    item.update({"status": "ready_to_publish", "final_file": "/tmp/reel.mp4", "caption": "Legenda", "caption_verified": True})
 
     result = publish_item(item, registry, lambda path, caption: "https://www.instagram.com/reel/ABC123/")
 
@@ -188,10 +200,21 @@ def test_publish_item_records_instagram_url_and_status():
     assert result["published_at"]
 
 
-def test_publish_item_preserves_ready_state_for_human_intervention():
+def test_publish_item_rejects_unverified_caption():
     registry = new_registry()
     item = add_candidate(registry, _approved_candidate())
     item.update({"status": "ready_to_publish", "final_file": "/tmp/reel.mp4", "caption": "Legenda"})
+
+    with pytest.raises(PipelineError, match="caption has not been verified"):
+        publish_item(item, registry, lambda _path, _caption: "https://www.instagram.com/reel/NEVER/")
+
+    assert item["status"] == "ready_to_publish"
+
+
+def test_publish_item_preserves_ready_state_for_human_intervention():
+    registry = new_registry()
+    item = add_candidate(registry, _approved_candidate())
+    item.update({"status": "ready_to_publish", "final_file": "/tmp/reel.mp4", "caption": "Legenda", "caption_verified": True})
 
     with pytest.raises(HumanInterventionRequired):
         publish_item(item, registry, lambda _path, _caption: (_ for _ in ()).throw(
